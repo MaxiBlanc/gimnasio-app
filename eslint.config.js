@@ -27,6 +27,11 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser } },
     ...reactHooks.configs.flat.recommended,
   },
+  // El service worker corre en su propio contexto (self, caches), no en la página.
+  {
+    files: ['apps/web/public/sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker } },
+  },
   // Va al final: desactiva las reglas de estilo que Prettier ya maneja.
   prettier,
 );

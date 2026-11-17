@@ -1,0 +1,15 @@
+{
+  "name": "GimnasioApp",
+  "short_name": "Gimnasio",
+  "description": "Gestión de gimnasios: socios, cuotas, pagos y rutinas.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1A1E23",
+  "theme_color": "#1A1E23",
+  "icons": [
+    { "src": "/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icono-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

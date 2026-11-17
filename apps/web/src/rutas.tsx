@@ -11,6 +11,7 @@ import { LoginStaff } from './paginas/LoginStaff';
 import { Configuracion } from './paginas/configuracion/Configuracion';
 import { GimnasioDetalle } from './paginas/admin/GimnasioDetalle';
 import { GimnasioNuevo } from './paginas/admin/GimnasioNuevo';
+import { ActivarCuenta } from './paginas/ActivarCuenta';
 import { ErrorDePantalla } from './paginas/ErrorDePantalla';
 import { NoEncontrada } from './paginas/NoEncontrada';
 import { PlanesDescuentos } from './paginas/planes/PlanesDescuentos';
@@ -78,6 +79,7 @@ export const enrutador = createBrowserRouter([
     children: [
       { path: '/', element: <ElegirGimnasio /> },
       { path: '/g/:slug', element: <LoginStaff /> },
+      { path: '/g/:slug/activar', element: <ActivarCuenta /> },
       { path: '/admin/ingresar', element: <LoginAdmin /> },
       {
         path: '/panel',

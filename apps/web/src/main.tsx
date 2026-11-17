@@ -38,3 +38,13 @@ createRoot(raiz).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// PWA: el service worker solo en producción. En desarrollo guardaría versiones viejas
+// del código y confundiría al editar.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Si no se puede registrar, la app funciona igual (solo no se instala).
+    });
+  });
+}

@@ -10,4 +10,6 @@ export default defineConfig({
     // (sameSite strict) funciona igual que en producción, donde Vercel sirve los dos juntos.
     proxy: { '/api': 'http://localhost:3000' },
   },
+  // Lo mismo para probar el build de producción con "npm run preview" (ahí sí corre el service worker).
+  preview: { port: 4173, proxy: { '/api': 'http://localhost:3000' } },
 });
