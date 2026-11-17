@@ -186,6 +186,9 @@ model Socio {
   hashContrasena     String?  @map("hash_contrasena")
   /// Baja lógica: un socio dado de baja no se borra, para conservar su historial de pagos.
   activo             Boolean  @default(true)
+  /// "juan perez 30111222": nombre, apellido y DNI sin acentos y en minúsculas.
+  /// Lo mantiene la API; sirve para que buscar "perez" encuentre a "Pérez".
+  textoBusqueda      String   @default("") @map("texto_busqueda")
   creadoEn           DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn      DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 

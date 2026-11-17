@@ -160,6 +160,31 @@ Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da
 - Cambiar el precio de un plan **no modifica los pagos ya registrados**; rige desde el próximo pago.
 - Si se pide un plan o descuento de **otro gimnasio**, la API responde 404, como si no existiera.
 
+## Socios
+
+| Endpoint                                   |              Dueño              | Recepción | Profesor |
+| ------------------------------------------ | :-----------------------------: | :-------: | :------: |
+| `GET /api/socios?busqueda=&pagina=`        |               ✅                |    ✅     |    ✅    |
+| `GET /api/socios/:id`                      |               ✅                |    ✅     |    ✅    |
+| `POST /api/socios`                         |               ✅                |    ✅     |          |
+| `PATCH /api/socios/:id`                    |               ✅                |    ✅     |          |
+| `POST /api/socios/:id/reenviar-activacion` |               ✅                |    ✅     |          |
+| `POST /api/cuenta-socio/activar`           | Público (con el token del mail) |           |          |
+
+- **DNI único por gimnasio**; se acepta con o sin puntos y se guarda solo con números.
+- **Búsqueda** por nombre, apellido o DNI, **sin importar acentos ni mayúsculas**: "perez" encuentra a "Pérez". Usa una columna normalizada (`texto_busqueda`) que mantiene la API.
+- **Baja lógica:** un socio dado de baja (`activo: false`) no se borra, no aparece en el listado salvo con `incluirBajas=true`, y se cierran sus sesiones.
+
+### Activación de la cuenta del socio
+
+1. Al dar de alta un socio, se le manda un **mail con un link** para crear su contraseña (vence en 7 días).
+2. El socio abre el link y elige su contraseña. El link **sirve una sola vez**.
+3. Recepción puede **reenviar** el mail; el link anterior deja de servir.
+
+Así, para crear la contraseña hay que tener acceso al mail del socio: no alcanza con saber su DNI. Si el mail no se puede enviar, el socio se crea igual y la API devuelve `correoEnviado: false`.
+
+En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en <http://localhost:8025>.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.

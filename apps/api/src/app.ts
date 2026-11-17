@@ -9,6 +9,7 @@ import { rutasAuth } from './modulos/auth/auth.rutas';
 import { rutasAdmin } from './modulos/admin/admin.rutas';
 import { rutasPlanes } from './modulos/planes/planes.rutas';
 import { rutasDescuentos } from './modulos/descuentos/descuentos.rutas';
+import { rutasCuentaSocio, rutasSocios } from './modulos/socios/socios.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -31,6 +32,8 @@ export function crearApp() {
   app.use('/api/admin', rutasAdmin);
   app.use('/api/planes', rutasPlanes);
   app.use('/api/descuentos', rutasDescuentos);
+  app.use('/api/socios', rutasSocios);
+  app.use('/api/cuenta-socio', rutasCuentaSocio);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

@@ -56,12 +56,15 @@ export function verificarTokenAcceso(token: string): DatosAuth | null {
   }
 }
 
-// ─────────────────────────── Token de refresco ───────────────────────────
+// ─────────────────── Tokens aleatorios (refresco y activación) ───────────────────
 
 export const NOMBRE_COOKIE_REFRESCO = 'token_refresco';
 
-/** 48 bytes aleatorios criptográficamente seguros: imposible de adivinar. */
-export function generarTokenRefresco(): string {
+/**
+ * 48 bytes aleatorios criptográficamente seguros: imposible de adivinar.
+ * Se usa para los tokens de refresco y para los links de activación de los socios.
+ */
+export function generarTokenAleatorio(): string {
   return randomBytes(48).toString('base64url');
 }
 

@@ -8,9 +8,11 @@
  * Las contraseñas de prueba están documentadas en el README.
  */
 import bcrypt from 'bcryptjs';
+import { normalizarTexto } from '@gimnasio/compartido';
 import { prisma } from '../src/db';
 import { FormaPago, Rol, TipoDescuento } from '../src/generated/prisma/enums';
 import { hoyEnArgentina, mesDeFecha, periodoDePago, sumarMeses } from '../src/dominio/periodos';
+import { textoBusquedaSocio } from '../src/modulos/socios/socios.servicio';
 
 const CONTRASENA_STAFF = 'Gimnasio123';
 const CONTRASENA_SOCIO = 'Socio1234';
@@ -181,15 +183,13 @@ async function main() {
         apellido: caso.apellido,
         dni: caso.dni,
         telefono: '11 5555-' + caso.dni.slice(-4),
-        email: `${caso.nombre}.${caso.apellido}@ejemplo.com`
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[̀-ͯ]/g, ''), // saca los acentos
+        email: normalizarTexto(`${caso.nombre}.${caso.apellido}@ejemplo.com`), // sin acentos
         emergenciaNombre: 'Contacto de ' + caso.nombre,
         emergenciaTelefono: '11 4444-' + caso.dni.slice(-4),
         planId: caso.plan.id,
         descuentoId: caso.conDescuento ? estudiante.id : null,
         hashContrasena: caso.conContrasena ? hashSocio : null,
+        textoBusqueda: textoBusquedaSocio(caso),
       },
     });
 
@@ -252,6 +252,7 @@ async function main() {
       emergenciaNombre: 'Contacto de Juan',
       emergenciaTelefono: '11 4444-1222',
       planId: planTitan.id,
+      textoBusqueda: textoBusquedaSocio({ nombre: 'Juan', apellido: 'Pérez', dni: '30111222' }),
     },
   });
 

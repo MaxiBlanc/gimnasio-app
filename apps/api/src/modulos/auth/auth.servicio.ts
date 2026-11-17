@@ -11,7 +11,7 @@ import type { Prisma } from '../../generated/prisma/client';
 import { Rol } from '../../generated/prisma/enums';
 import {
   firmarTokenAcceso,
-  generarTokenRefresco,
+  generarTokenAleatorio,
   hashearToken,
   vencimientoTokenRefresco,
 } from './tokens';
@@ -90,7 +90,7 @@ async function verificarContrasena(usuario: UsuarioConGimnasio | null, contrasen
 }
 
 async function crearSesion(usuario: UsuarioConGimnasio): Promise<SesionIniciada> {
-  const tokenRefresco = generarTokenRefresco();
+  const tokenRefresco = generarTokenAleatorio();
   await prisma.sesion.create({
     data: {
       usuarioId: usuario.id,

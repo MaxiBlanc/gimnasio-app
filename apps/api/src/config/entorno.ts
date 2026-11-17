@@ -15,6 +15,16 @@ const esquemaEntorno = z.object({
   JWT_SECRETO: z.string().min(32, 'Debe tener al menos 32 caracteres'),
   MINUTOS_TOKEN_ACCESO: z.coerce.number().int().positive().default(15),
   DIAS_TOKEN_REFRESCO: z.coerce.number().int().positive().default(30),
+
+  // Correo. "smtp" manda de verdad (Mailpit en desarrollo, Resend en producción);
+  // "memoria" no manda nada y guarda los mails en un array (para los tests).
+  CORREO_MODO: z.enum(['smtp', 'memoria']).default('smtp'),
+  CORREO_REMITENTE: z.string().default('GimnasioApp <no-responder@gimnasioapp.local>'),
+  SMTP_HOST: z.string().default('localhost'),
+  SMTP_PUERTO: z.coerce.number().int().positive().default(1025),
+  SMTP_USUARIO: z.string().optional(),
+  SMTP_CONTRASENA: z.string().optional(),
+  DIAS_VALIDEZ_ACTIVACION: z.coerce.number().int().positive().default(7),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;
