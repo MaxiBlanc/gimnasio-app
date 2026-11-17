@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
-import { Building2, House } from 'lucide-react';
+import { Building2, House, Users } from 'lucide-react';
 import type { Rol, UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
@@ -9,6 +9,9 @@ import { InicioPanel } from './paginas/InicioPanel';
 import { LoginAdmin } from './paginas/LoginAdmin';
 import { LoginStaff } from './paginas/LoginStaff';
 import { NoEncontrada } from './paginas/NoEncontrada';
+import { SocioFicha } from './paginas/socios/SocioFicha';
+import { SocioEditar, SocioNuevo } from './paginas/socios/SocioNuevo';
+import { SociosLista } from './paginas/socios/SociosLista';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
 
@@ -16,6 +19,12 @@ const ROLES_STAFF: Rol[] = ['DUENO', 'RECEPCION', 'PROFESOR', 'KIOSCO'];
 
 const MENU_STAFF: ItemMenu[] = [
   { ruta: '/panel', etiqueta: 'Inicio', Icono: House, roles: ROLES_STAFF, exacto: true },
+  {
+    ruta: '/panel/socios',
+    etiqueta: 'Socios',
+    Icono: Users,
+    roles: ['DUENO', 'RECEPCION', 'PROFESOR'],
+  },
 ];
 
 const MENU_ADMIN: ItemMenu[] = [
@@ -65,7 +74,13 @@ export const enrutador = createBrowserRouter([
         )}
       </ConSesion>
     ),
-    children: [{ index: true, element: <InicioPanel /> }],
+    children: [
+      { index: true, element: <InicioPanel /> },
+      { path: 'socios', element: <SociosLista /> },
+      { path: 'socios/nuevo', element: <SocioNuevo /> },
+      { path: 'socios/:id', element: <SocioFicha /> },
+      { path: 'socios/:id/editar', element: <SocioEditar /> },
+    ],
   },
   {
     path: '/admin',

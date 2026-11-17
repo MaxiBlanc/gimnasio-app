@@ -13,8 +13,10 @@ export function InicioAdmin() {
   return (
     <div className={estilos.pagina}>
       <header className={estilos.encabezado}>
-        <h1 className="titulo-pagina">Gimnasios</h1>
-        <p className="texto-suave">Todos los gimnasios que usan GimnasioApp.</p>
+        <div>
+          <h1 className="titulo-pagina">Gimnasios</h1>
+          <p className="texto-suave">Todos los gimnasios que usan GimnasioApp.</p>
+        </div>
       </header>
 
       {gimnasios.isPending && <p className="texto-suave">Cargando…</p>}

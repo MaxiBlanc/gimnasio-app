@@ -4,6 +4,7 @@ import {
   type EstadoCuota,
   type ResumenCuotas as Resumen,
 } from '@gimnasio/compartido';
+import { Link } from 'react-router';
 import estilos from './ResumenCuotas.module.css';
 
 const DESCRIPCION: Record<EstadoCuota, string> = {
@@ -40,7 +41,11 @@ export function ResumenCuotas({ resumen }: { resumen: Resumen }) {
       <dl className={estilos.detalle}>
         {ESTADOS_CUOTA.map((estado) => (
           <div key={estado} className={estilos.estado} data-estado={estado}>
-            <dt>{NOMBRES_ESTADO_CUOTA[estado]}</dt>
+            <dt>
+              <Link to={`/panel/socios?estado=${estado}`} className={estilos.enlace}>
+                {NOMBRES_ESTADO_CUOTA[estado]}
+              </Link>
+            </dt>
             <dd className={`titular numero ${estilos.cantidad}`}>{resumen[estado]}</dd>
             <dd className={estilos.descripcion}>{DESCRIPCION[estado]}</dd>
           </div>

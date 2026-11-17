@@ -3,19 +3,7 @@
   gap: 1.5rem;
 }
 
-/* Color de cada estado, en un solo lugar. */
-[data-estado='AL_DIA'] {
-  --color-estado: var(--al-dia);
-}
-[data-estado='POR_VENCER'] {
-  --color-estado: var(--por-vencer);
-}
-[data-estado='PENDIENTE'] {
-  --color-estado: var(--pendiente);
-}
-[data-estado='VENCIDO'] {
-  --color-estado: var(--vencido);
-}
+/* El color de cada estado (--color-estado) está en global.css. */
 
 .barra {
   display: flex;
@@ -70,4 +58,21 @@
   .cantidad {
     font-size: 2.5rem;
   }
+}
+
+/* Cada estado lleva al listado filtrado; el ::after hace clickeable todo el bloque. */
+.estado {
+  position: relative;
+}
+.enlace {
+  text-decoration: none;
+}
+.enlace::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.enlace:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

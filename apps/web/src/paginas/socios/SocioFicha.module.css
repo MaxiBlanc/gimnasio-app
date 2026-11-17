@@ -1,0 +1,119 @@
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.875rem;
+}
+
+/* Franja de estado: el color del disco a la izquierda, con el "pagado hasta" bien visible. */
+.franja {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-left: 6px solid var(--color-estado);
+  border-radius: var(--radio-chico);
+  background: var(--color-estado-fondo);
+}
+.franja p {
+  color: var(--tinta);
+}
+.franja strong {
+  font-size: 1.125rem;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1.25rem 2rem;
+  margin: 0;
+}
+.datos dt {
+  font-size: 0.875rem;
+  color: var(--tinta-suave);
+}
+.datos dd {
+  margin: 0.125rem 0 0;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.datos a {
+  text-underline-offset: 3px;
+}
+.enlinea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.botonChico {
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* El detalle del cobro, como un ticket. */
+.ticket {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 1rem 1.125rem;
+  border: 1px dashed var(--linea-fuerte);
+  border-radius: var(--radio-chico);
+  background: var(--superficie-2);
+}
+.ticket div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.ticket dt {
+  color: var(--tinta-suave);
+}
+.ticket dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+/* ::first-letter solo funciona en elementos de bloque. */
+.capitalizar {
+  display: inline-block;
+}
+.capitalizar::first-letter {
+  text-transform: uppercase;
+}
+.total {
+  align-items: baseline;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--linea);
+}
+.total dt {
+  color: var(--tinta);
+  font-weight: 700;
+}
+.total dd {
+  font-size: 2.25rem;
+}
+
+.anulado td {
+  color: var(--tinta-suave);
+}
+.anulado .monto {
+  text-decoration: line-through;
+}
+.motivo {
+  display: block;
+  font-size: 0.875rem;
+  white-space: normal;
+}
+
+.zonaBaja {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}

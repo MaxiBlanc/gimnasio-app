@@ -17,3 +17,9 @@ export function mostrarErrorEnFormulario<T extends FieldValues>(
   }
   return 'Ocurrió un error inesperado';
 }
+
+/** Un solo mensaje para mostrar: el del primer campo con error, o el general. */
+export function mensajeDeError(error: unknown): string {
+  if (error instanceof ErrorApi) return error.campos[0]?.mensaje ?? error.message;
+  return 'Ocurrió un error inesperado';
+}

@@ -27,8 +27,10 @@ export function InicioPanel() {
   return (
     <div className={estilos.pagina}>
       <header className={estilos.encabezado}>
-        <h1 className="titulo-pagina">Hola, {primerNombre}</h1>
-        <p className={`texto-suave ${estilos.fecha}`}>{fechaDeHoy.format(new Date())}</p>
+        <div>
+          <h1 className="titulo-pagina">Hola, {primerNombre}</h1>
+          <p className={`texto-suave ${estilos.fecha}`}>{fechaDeHoy.format(new Date())}</p>
+        </div>
       </header>
 
       {veCuotas && (

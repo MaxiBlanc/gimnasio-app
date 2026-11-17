@@ -1,24 +1,103 @@
 /* Estructura común de las páginas del panel. */
+/* minmax(0, 1fr): sin esto, una tabla ancha estira toda la página en vez de scrollear sola. */
 .pagina {
   display: grid;
-  gap: 2.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
 }
 .encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+.encabezado > div:first-child {
   display: grid;
   gap: 0.25rem;
+}
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .fecha::first-letter {
   text-transform: uppercase;
 }
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+  color: var(--tinta-suave);
+  font-weight: 600;
+  text-decoration: none;
+}
+.volver:hover {
+  color: var(--tinta);
+}
 .seccion {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   padding: clamp(1.25rem, 2.5vw, 2rem);
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--superficie);
 }
+.encabezadoSeccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 .tituloSeccion {
   font-size: 1.125rem;
   font-weight: 700;
+}
+.vacio {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--tinta-suave);
+}
+
+/* Formularios largos (socio, configuración): dos columnas en PC, una en el celular. */
+.formulario {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 48rem;
+}
+.grupo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.grupo legend {
+  grid-column: 1 / -1;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.ancho {
+  grid-column: 1 / -1;
+}
+.botonera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.formularioDialogo {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (max-width: 40rem) {
+  .grupo {
+    grid-template-columns: 1fr;
+  }
 }
