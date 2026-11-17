@@ -1,0 +1,32 @@
+{
+  "name": "gimnasio-app",
+  "private": true,
+  "description": "GimnasioApp: sistema de gestión para gimnasios (SaaS multi-gimnasio)",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @gimnasio/api",
+    "db:levantar": "docker compose up -d",
+    "db:bajar": "docker compose down",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "formatear": "prettier --write .",
+    "formato:verificar": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

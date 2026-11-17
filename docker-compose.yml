@@ -1,0 +1,45 @@
+# Servicios para DESARROLLO. En producción usamos Neon (Postgres gestionado) y Resend (mails).
+# Levantar:  npm run db:levantar     Bajar:  npm run db:bajar
+services:
+  # Base de datos de desarrollo. Los datos persisten en el volumen "datos_postgres".
+  postgres:
+    image: postgres:17-alpine
+    container_name: gimnasio-postgres
+    environment:
+      POSTGRES_USER: gimnasio
+      POSTGRES_PASSWORD: gimnasio
+      POSTGRES_DB: gimnasio
+    ports:
+      - '5433:5432' # 5433 en tu PC para no chocar con un Postgres instalado localmente.
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gimnasio']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Base de datos SOLO para los tests: se borra y se recrea, así no ensuciamos la de desarrollo.
+  # "tmpfs" la guarda en memoria: es más rápida y no deja nada en disco.
+  postgres_test:
+    image: postgres:17-alpine
+    container_name: gimnasio-postgres-test
+    environment:
+      POSTGRES_USER: gimnasio
+      POSTGRES_PASSWORD: gimnasio
+      POSTGRES_DB: gimnasio_test
+    ports:
+      - '5434:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  # Atrapa todos los mails que manda la API y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: gimnasio-mailpit
+    ports:
+      - '1025:1025' # SMTP (adonde manda la API)
+      - '8025:8025' # Interfaz web
+
+volumes:
+  datos_postgres:

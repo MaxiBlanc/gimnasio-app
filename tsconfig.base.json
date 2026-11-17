@@ -1,0 +1,27 @@
+{
+  // Configuración común a todos los paquetes. Cada app la extiende con "extends".
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    // "Bundler": la resolución de módulos que usan tsx, Vite y tsup.
+    // Nos permite importar sin la extensión ".js" que exige "NodeNext".
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    // Chequeos estrictos: la razón principal para usar TypeScript.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    // TypeScript solo verifica tipos; tsx/Vite/tsup se encargan de generar el JavaScript.
+    "noEmit": true
+  }
+}

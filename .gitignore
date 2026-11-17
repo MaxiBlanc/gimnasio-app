@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Variables de entorno: nunca se suben (tienen secretos). Sí se sube .env.example.
+.env
+.env.*
+!.env.example
+
+# Archivos subidos en desarrollo (logos)
+apps/api/subidas/
+
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.vercel
