@@ -7,5 +7,6 @@ export * from './planes';
 export * from './socios';
 export * from './texto';
 export * from './pagos';
+export * from './cuotas';
 
 export const NOMBRE_APP = 'GimnasioApp';

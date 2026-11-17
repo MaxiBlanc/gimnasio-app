@@ -8,7 +8,13 @@ import {
 import { autenticar, obtenerGimnasioId, permitirRoles } from '../../middlewares/autenticar';
 import { esquemaParamId } from '../../validacion';
 import { activarCuenta, reenviarActivacion } from './activacion.servicio';
-import { crearSocio, editarSocio, listarSocios, obtenerSocio } from './socios.servicio';
+import {
+  crearSocio,
+  editarSocio,
+  listarSocios,
+  obtenerSocio,
+  resumenCuotas,
+} from './socios.servicio';
 
 // ───────────────────── Gestión de socios (personal del gimnasio) ─────────────────────
 
@@ -24,6 +30,12 @@ const puedenEditar = permitirRoles('DUENO', 'RECEPCION');
 rutasSocios.get('/', puedenVer, async (req, res) => {
   const filtros = esquemaFiltrosSocios.parse(req.query);
   res.json(await listarSocios(obtenerGimnasioId(req), filtros));
+});
+
+// Va ANTES de '/:id': Express prueba las rutas en orden, y si no, tomaría
+// "resumen-cuotas" como si fuera el id de un socio.
+rutasSocios.get('/resumen-cuotas', puedenEditar, async (req, res) => {
+  res.json(await resumenCuotas(obtenerGimnasioId(req)));
 });
 
 rutasSocios.get('/:id', puedenVer, async (req, res) => {

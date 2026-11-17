@@ -162,18 +162,38 @@ Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da
 
 ## Socios
 
-| Endpoint                                   |              Dueño              | Recepción | Profesor |
-| ------------------------------------------ | :-----------------------------: | :-------: | :------: |
-| `GET /api/socios?busqueda=&pagina=`        |               ✅                |    ✅     |    ✅    |
-| `GET /api/socios/:id`                      |               ✅                |    ✅     |    ✅    |
-| `POST /api/socios`                         |               ✅                |    ✅     |          |
-| `PATCH /api/socios/:id`                    |               ✅                |    ✅     |          |
-| `POST /api/socios/:id/reenviar-activacion` |               ✅                |    ✅     |          |
-| `POST /api/cuenta-socio/activar`           | Público (con el token del mail) |           |          |
+| Endpoint                                    |              Dueño              | Recepción | Profesor |
+| ------------------------------------------- | :-----------------------------: | :-------: | :------: |
+| `GET /api/socios?busqueda=&estado=&pagina=` |               ✅                |    ✅     |    ✅    |
+| `GET /api/socios/resumen-cuotas`            |               ✅                |    ✅     |          |
+| `GET /api/socios/:id`                       |               ✅                |    ✅     |    ✅    |
+| `POST /api/socios`                          |               ✅                |    ✅     |          |
+| `PATCH /api/socios/:id`                     |               ✅                |    ✅     |          |
+| `POST /api/socios/:id/reenviar-activacion`  |               ✅                |    ✅     |          |
+| `POST /api/cuenta-socio/activar`            | Público (con el token del mail) |           |          |
 
 - **DNI único por gimnasio**; se acepta con o sin puntos y se guarda solo con números.
 - **Búsqueda** por nombre, apellido o DNI, **sin importar acentos ni mayúsculas**: "perez" encuentra a "Pérez". Usa una columna normalizada (`texto_busqueda`) que mantiene la API.
 - **Baja lógica:** un socio dado de baja (`activo: false`) no se borra, no aparece en el listado salvo con `incluirBajas=true`, y se cierran sus sesiones.
+- **Estado de cuota:** cada socio trae `cuota: { estado, vencimiento }`, calculado al momento con las [reglas de la cuota](#reglas-de-la-cuota). El vencimiento es el último día pagado (los pagos anulados no cuentan).
+- **Filtro por estado:** `?estado=VENCIDO` lista los morosos. El filtro se resuelve **en SQL** (no trae todos los socios a memoria) y un test verifica que coincida, socio por socio, con la regla de la función pura.
+- **Resumen:** `resumen-cuotas` devuelve cuántos socios activos hay en cada estado.
+
+## Configuración del gimnasio
+
+`GET /api/mi-gimnasio` (todo el personal) y `PATCH /api/mi-gimnasio` (solo el dueño).
+
+| Campo                  | Por defecto | Para qué sirve                                        |
+| ---------------------- | :---------: | ----------------------------------------------------- |
+| `logoUrl`              |      —      | Logo del gimnasio (URL https)                         |
+| `colorPrimario`        |  `#E4FF3A`  | Color de la marca                                     |
+| `colorSecundario`      |  `#111111`  | Color de fondo de la marca                            |
+| `diaCierreCobro`       |     10      | Desde el día siguiente, una cuota impaga es "vencida" |
+| `diasAvisoVencimiento` |      5      | Días antes de fin de mes en que pasa a "por vencer"   |
+| `minutosPermanencia`   |     90      | Cuánto cuenta un ingreso para la ocupación            |
+| `capacidadMaxima`      |      —      | Para mostrar la ocupación como porcentaje             |
+
+Siempre es el gimnasio **del token**: un dueño no puede tocar la configuración de otro gimnasio. El nombre y el slug solo los cambia el súper-admin.
 
 ### Activación de la cuenta del socio
 

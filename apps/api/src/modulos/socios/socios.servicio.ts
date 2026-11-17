@@ -1,13 +1,18 @@
 import {
+  ESTADOS_CUOTA,
   normalizarTexto,
   type DatosCrearSocio,
   type DatosEditarSocio,
+  type EstadoCuota,
   type FiltrosSocios,
   type Pagina,
   type RespuestaAltaSocio,
+  type ResumenCuotas,
   type Socio,
 } from '@gimnasio/compartido';
 import { prisma } from '../../db';
+import { calcularEstadoCuota, limitesDeHoy, type ConfigCuotas } from '../../dominio/estadoCuota';
+import { fechaATexto, hoyEnArgentina } from '../../dominio/periodos';
 import { ErrorApp } from '../../errores';
 import type { Prisma } from '../../generated/prisma/client';
 import { enviarActivacion } from './activacion.servicio';
@@ -26,13 +31,75 @@ const seleccionSocio = {
   creadoEn: true,
   plan: { select: { id: true, nombre: true } },
   descuento: { select: { id: true, nombre: true } },
+  // El pago vigente que llega más lejos: su `periodoHasta` es el vencimiento del socio.
+  pagos: {
+    where: { anuladoEn: null },
+    orderBy: { periodoHasta: 'desc' },
+    take: 1,
+    select: { periodoHasta: true },
+  },
 } satisfies Prisma.SocioSelect;
 
 type SocioDeBase = Prisma.SocioGetPayload<{ select: typeof seleccionSocio }>;
 
+/** Lo necesario para calcular estados de cuota: la fecha de hoy y la config del gimnasio. */
+interface ContextoCuotas {
+  hoy: Date;
+  config: ConfigCuotas;
+}
+
+async function obtenerContextoCuotas(gimnasioId: string): Promise<ContextoCuotas> {
+  const config = await prisma.gimnasio.findUniqueOrThrow({
+    where: { id: gimnasioId },
+    select: { diaCierreCobro: true, diasAvisoVencimiento: true },
+  });
+  return { hoy: hoyEnArgentina(), config };
+}
+
 /** Nunca devolvemos el hash: solo si la cuenta está activada o no. */
-function aSocio({ hashContrasena, creadoEn, ...socio }: SocioDeBase): Socio {
-  return { ...socio, cuentaActivada: hashContrasena !== null, creadoEn: creadoEn.toISOString() };
+function aSocio(
+  { hashContrasena, creadoEn, pagos, ...socio }: SocioDeBase,
+  { hoy, config }: ContextoCuotas,
+): Socio {
+  const vencimiento = pagos[0]?.periodoHasta ?? null;
+  return {
+    ...socio,
+    cuentaActivada: hashContrasena !== null,
+    creadoEn: creadoEn.toISOString(),
+    cuota: {
+      estado: calcularEstadoCuota(vencimiento, hoy, config),
+      vencimiento: vencimiento ? fechaATexto(vencimiento) : null,
+    },
+  };
+}
+
+/**
+ * Traduce un estado de cuota a una condición de base de datos, para FILTRAR el listado
+ * (ej. "solo vencidos") sin traer todos los socios a memoria.
+ * Usa las mismas reglas que calcularEstadoCuota (vía limitesDeHoy), y un test verifica
+ * que ambas coincidan socio por socio.
+ */
+function filtroEstado(estado: EstadoCuota | undefined, { hoy, config }: ContextoCuotas) {
+  if (!estado) return {};
+  const { finMesActual, enPeriodoDeAviso, pasoElCierre } = limitesDeHoy(hoy, config);
+
+  const pagoVigente = (periodoHasta: Prisma.DateTimeFilter) => ({
+    anuladoEn: null,
+    periodoHasta,
+  });
+  const pagoEsteMes = { pagos: { some: pagoVigente({ gte: finMesActual }) } };
+  const sinPagoEsteMes = { pagos: { none: pagoVigente({ gte: finMesActual }) } };
+  const pagoElSiguiente = { pagos: { some: pagoVigente({ gt: finMesActual }) } };
+  const sinPagoElSiguiente = { pagos: { none: pagoVigente({ gt: finMesActual }) } };
+  const ninguno = { id: { in: [] } }; // condición que nunca se cumple
+
+  const filtros: Record<EstadoCuota, Prisma.SocioWhereInput> = {
+    AL_DIA: enPeriodoDeAviso ? pagoElSiguiente : pagoEsteMes,
+    POR_VENCER: enPeriodoDeAviso ? { AND: [pagoEsteMes, sinPagoElSiguiente] } : ninguno,
+    PENDIENTE: pasoElCierre ? ninguno : sinPagoEsteMes,
+    VENCIDO: pasoElCierre ? sinPagoEsteMes : ninguno,
+  };
+  return filtros[estado];
 }
 
 const socioNoEncontrado = () => new ErrorApp(404, 'SOCIO_NO_ENCONTRADO', 'No existe ese socio');
@@ -109,10 +176,11 @@ export async function listarSocios(
   gimnasioId: string,
   filtros: FiltrosSocios,
 ): Promise<Pagina<Socio>> {
+  const contexto = await obtenerContextoCuotas(gimnasioId);
   const where: Prisma.SocioWhereInput = {
     gimnasioId,
     activo: filtros.incluirBajas ? undefined : true,
-    AND: filtroBusqueda(filtros.busqueda),
+    AND: [...filtroBusqueda(filtros.busqueda), filtroEstado(filtros.estado, contexto)],
   };
 
   // Las dos consultas son independientes: las mandamos juntas en una transacción.
@@ -127,13 +195,37 @@ export async function listarSocios(
     prisma.socio.count({ where }),
   ]);
 
-  return { datos: socios.map(aSocio), total, pagina: filtros.pagina, porPagina: filtros.porPagina };
+  return {
+    datos: socios.map((socio) => aSocio(socio, contexto)),
+    total,
+    pagina: filtros.pagina,
+    porPagina: filtros.porPagina,
+  };
+}
+
+/**
+ * Cuántos socios ACTIVOS hay en cada estado. Son 4 COUNT que corren en paralelo
+ * en la base, sin traer ningún socio a memoria.
+ */
+export async function resumenCuotas(gimnasioId: string): Promise<ResumenCuotas> {
+  const contexto = await obtenerContextoCuotas(gimnasioId);
+  const cantidades = await prisma.$transaction(
+    ESTADOS_CUOTA.map((estado) =>
+      prisma.socio.count({
+        where: { gimnasioId, activo: true, ...filtroEstado(estado, contexto) },
+      }),
+    ),
+  );
+  // Object.fromEntries arma { AL_DIA: n, POR_VENCER: n, ... } a partir de pares [clave, valor].
+  return Object.fromEntries(
+    ESTADOS_CUOTA.map((estado, i) => [estado, cantidades[i] ?? 0]),
+  ) as ResumenCuotas;
 }
 
 export async function obtenerSocio(gimnasioId: string, id: string): Promise<Socio> {
   const socio = await prisma.socio.findFirst({ where: { id, gimnasioId }, select: seleccionSocio });
   if (!socio) throw socioNoEncontrado();
-  return aSocio(socio);
+  return aSocio(socio, await obtenerContextoCuotas(gimnasioId));
 }
 
 /**
@@ -154,7 +246,7 @@ export async function crearSocio(
   });
 
   const correoEnviado = await enviarActivacion(gimnasioId, socio.id);
-  return { socio: aSocio(socio), correoEnviado };
+  return { socio: aSocio(socio, await obtenerContextoCuotas(gimnasioId)), correoEnviado };
 }
 
 export async function editarSocio(
@@ -190,5 +282,5 @@ export async function editarSocio(
     return actualizado;
   });
 
-  return aSocio(socio);
+  return aSocio(socio, await obtenerContextoCuotas(gimnasioId));
 }

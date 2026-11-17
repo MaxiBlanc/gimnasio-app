@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ESTADOS_CUOTA, type CuotaSocio } from './cuotas';
 import { esquemaContrasenaNueva } from './gimnasios';
 
 const texto = (min: number, max: number, campo: string) =>
@@ -49,6 +50,8 @@ export const esquemaFiltrosSocios = z.object({
     .enum(['true', 'false'])
     .optional()
     .transform((valor) => valor === 'true'),
+  /** Solo los socios en este estado de cuota (ej. ?estado=VENCIDO para ver morosos). */
+  estado: z.enum(ESTADOS_CUOTA).optional(),
   pagina: z.coerce.number().int().min(1).default(1),
   porPagina: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -75,6 +78,8 @@ export interface Socio {
   cuentaActivada: boolean;
   plan: { id: string; nombre: string };
   descuento: { id: string; nombre: string } | null;
+  /** Estado de la cuota HOY y hasta cuándo tiene pagado. */
+  cuota: CuotaSocio;
   creadoEn: string;
 }
 

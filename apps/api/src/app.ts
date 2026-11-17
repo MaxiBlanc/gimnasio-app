@@ -11,6 +11,7 @@ import { rutasPlanes } from './modulos/planes/planes.rutas';
 import { rutasDescuentos } from './modulos/descuentos/descuentos.rutas';
 import { rutasCuentaSocio, rutasSocios } from './modulos/socios/socios.rutas';
 import { rutasPagos, rutasPagosDeSocio } from './modulos/pagos/pagos.rutas';
+import { rutasMiGimnasio } from './modulos/mi-gimnasio/miGimnasio.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -38,6 +39,7 @@ export function crearApp() {
   app.use('/api/socios', rutasSocios);
   app.use('/api/cuenta-socio', rutasCuentaSocio);
   app.use('/api/pagos', rutasPagos);
+  app.use('/api/mi-gimnasio', rutasMiGimnasio);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

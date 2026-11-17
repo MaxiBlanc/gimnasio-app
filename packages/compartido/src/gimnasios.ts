@@ -51,6 +51,39 @@ export const esquemaEditarGimnasio = z
   .refine((datos) => Object.keys(datos).length > 0, 'No hay nada para modificar');
 export type DatosEditarGimnasio = z.infer<typeof esquemaEditarGimnasio>;
 
+// ───────────── Configuración que el DUEÑO maneja de su propio gimnasio ─────────────
+
+/** Mismos límites que los CHECK de la base de datos. */
+export const esquemaConfiguracionGimnasio = z
+  .object({
+    logoUrl: camposGimnasio.logoUrl,
+    colorPrimario: esquemaColor,
+    colorSecundario: esquemaColor,
+    diaCierreCobro: z.number().int().min(1, 'Entre 1 y 28').max(28, 'Entre 1 y 28'),
+    diasAvisoVencimiento: z.number().int().min(0, 'Entre 0 y 28').max(28, 'Entre 0 y 28'),
+    minutosPermanencia: z.number().int().min(15, 'Mínimo 15 minutos').max(600, 'Máximo 10 horas'),
+    capacidadMaxima: z.number().int().positive('Debe ser mayor a 0').max(10_000).nullable(),
+  })
+  .partial()
+  .refine((datos) => Object.keys(datos).length > 0, 'No hay nada para modificar');
+export type DatosConfiguracionGimnasio = z.infer<typeof esquemaConfiguracionGimnasio>;
+
+export interface ConfiguracionGimnasio {
+  id: string;
+  nombre: string;
+  slug: string;
+  logoUrl: string | null;
+  colorPrimario: string;
+  colorSecundario: string;
+  /** Día del mes a partir del cual (el día siguiente) una cuota impaga está vencida. */
+  diaCierreCobro: number;
+  /** Días antes de fin de mes en que la cuota pasa a "por vencer". */
+  diasAvisoVencimiento: number;
+  /** Minutos que un ingreso cuenta como "presente" para la ocupación. */
+  minutosPermanencia: number;
+  capacidadMaxima: number | null;
+}
+
 /**
  * Gimnasio tal como lo ve el súper-admin.
  * Las fechas viajan en JSON como texto ISO ("2026-11-17T10:00:00.000Z"), por eso son string.
