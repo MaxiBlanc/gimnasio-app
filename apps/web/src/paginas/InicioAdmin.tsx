@@ -1,4 +1,6 @@
+import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import type { GimnasioAdmin } from '@gimnasio/compartido';
 import { pedir } from '../api/cliente';
 import estilos from './paginas.module.css';
@@ -17,6 +19,10 @@ export function InicioAdmin() {
           <h1 className="titulo-pagina">Gimnasios</h1>
           <p className="texto-suave">Todos los gimnasios que usan GimnasioApp.</p>
         </div>
+        <Link to="/admin/gimnasios/nuevo" className="boton boton-principal">
+          <Plus size={18} aria-hidden />
+          Nuevo gimnasio
+        </Link>
       </header>
 
       {gimnasios.isPending && <p className="texto-suave">Cargando…</p>}
@@ -39,7 +45,7 @@ export function InicioAdmin() {
             </thead>
             <tbody>
               {gimnasios.data.map((gimnasio) => (
-                <tr key={gimnasio.id}>
+                <tr key={gimnasio.id} className={tabla.filaEnlace}>
                   <td>
                     <span className={tabla.conMuestra}>
                       <span
@@ -47,7 +53,9 @@ export function InicioAdmin() {
                         style={{ background: gimnasio.colorPrimario }}
                         aria-hidden="true"
                       />
-                      <strong>{gimnasio.nombre}</strong>
+                      <Link to={`/admin/gimnasios/${gimnasio.id}`} className={tabla.enlaceFila}>
+                        <strong>{gimnasio.nombre}</strong>
+                      </Link>
                     </span>
                   </td>
                   <td className="texto-suave">{gimnasio.slug}</td>

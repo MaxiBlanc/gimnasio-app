@@ -9,6 +9,8 @@ import { InicioPanel } from './paginas/InicioPanel';
 import { LoginAdmin } from './paginas/LoginAdmin';
 import { LoginStaff } from './paginas/LoginStaff';
 import { Configuracion } from './paginas/configuracion/Configuracion';
+import { GimnasioDetalle } from './paginas/admin/GimnasioDetalle';
+import { GimnasioNuevo } from './paginas/admin/GimnasioNuevo';
 import { ErrorDePantalla } from './paginas/ErrorDePantalla';
 import { NoEncontrada } from './paginas/NoEncontrada';
 import { PlanesDescuentos } from './paginas/planes/PlanesDescuentos';
@@ -33,7 +35,7 @@ const MENU_STAFF: ItemMenu[] = [
 ];
 
 const MENU_ADMIN: ItemMenu[] = [
-  { ruta: '/admin', etiqueta: 'Gimnasios', Icono: Building2, roles: ['SUPERADMIN'], exacto: true },
+  { ruta: '/admin', etiqueta: 'Gimnasios', Icono: Building2, roles: ['SUPERADMIN'] },
 ];
 
 /**
@@ -137,7 +139,11 @@ export const enrutador = createBrowserRouter([
             )}
           </ConSesion>
         ),
-        children: [{ index: true, element: <InicioAdmin /> }],
+        children: [
+          { index: true, element: <InicioAdmin /> },
+          { path: 'gimnasios/nuevo', element: <GimnasioNuevo /> },
+          { path: 'gimnasios/:id', element: <GimnasioDetalle /> },
+        ],
       },
       { path: '*', element: <NoEncontrada /> },
     ],
