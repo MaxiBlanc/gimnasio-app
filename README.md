@@ -233,25 +233,37 @@ Siempre es el gimnasio **del token**: un dueño no puede tocar la configuración
 
 ## Web
 
-La app web está en `apps/web`. Rutas:
+La app web está en `apps/web`. Pantallas:
 
-| Ruta              | Qué es                                                          |
-| ----------------- | --------------------------------------------------------------- |
-| `/`               | Elegir el gimnasio (recuerda el último que usaste)              |
-| `/g/:slug`        | Login del personal de ese gimnasio, con su nombre y sus colores |
-| `/panel`          | Panel del personal                                              |
-| `/admin/ingresar` | Login del súper-admin                                           |
-| `/admin`          | Panel del súper-admin                                           |
+| Ruta                      | Quién                | Qué es                                                                |
+| ------------------------- | -------------------- | --------------------------------------------------------------------- |
+| `/`                       | Todos                | Elegir el gimnasio (recuerda el último que usaste)                    |
+| `/g/:slug`                | Personal             | Login con el nombre y los colores del gimnasio                        |
+| `/g/:slug/activar?token=` | Socio                | Crear la contraseña desde el link del mail de bienvenida              |
+| `/panel`                  | Personal             | Inicio: resumen de cuotas del mes (cada estado lleva al listado)      |
+| `/panel/socios`           | Dueño, recep., profe | Listado con búsqueda, filtro por estado de cuota y paginado           |
+| `/panel/socios/:id`       | Dueño, recep., profe | Ficha: estado, datos, pagos, cobrar cuota, reenviar mail, dar de baja |
+| `/panel/socios/nuevo`     | Dueño, recepción     | Alta de socio (también `/panel/socios/:id/editar`)                    |
+| `/panel/planes`           | Dueño                | Planes y descuentos                                                   |
+| `/panel/configuracion`    | Dueño                | Logo, colores, día de cierre, días de aviso, permanencia, capacidad   |
+| `/admin/ingresar`         | Súper-admin          | Login del súper-admin                                                 |
+| `/admin`                  | Súper-admin          | Gimnasios: alta, detalle, edición y suspensión                        |
+
+El profesor ve los socios pero no sus pagos; la anulación de pagos es solo del dueño.
 
 Decisiones:
 
 - **Primero el gimnasio, después el login.** `/g/power-gym` pide la marca a `GET /api/publico/gimnasios/:slug` (público: solo nombre, logo y colores) y muestra la pantalla con los colores del gimnasio antes de entrar.
 - **Cada gimnasio con su marca.** Los colores se pasan a variables CSS (`--marca`, `--marca-oscura`). El color del texto sobre la marca (negro o blanco) se calcula con la fórmula de contraste de WCAG, así un gimnasio amarillo no queda con botones ilegibles.
 - **Estados de la cuota con los colores de los discos olímpicos:** verde (al día), amarillo (por vencer), azul (pendiente) y rojo (vencido). Se usan igual en toda la app.
-- **Tipografía:** Archivo, una sola familia con eje de ancho: angosta y pesada para títulos y números (como la rotulación de un gimnasio), normal para el texto. Se sirve desde el propio sitio (sin Google Fonts), así funciona también sin conexión cuando sea PWA.
+- **Tipografía:** Archivo, una sola familia con eje de ancho: angosta y pesada para títulos y números (como la rotulación de un gimnasio), normal para el texto. Se sirve desde el propio sitio (sin Google Fonts), así funciona también sin conexión.
 - **Modo claro y oscuro:** sigue al dispositivo, o se elige con el botón del panel.
 - **El token de acceso vive solo en memoria**, no en `localStorage` (donde un script inyectado lo podría robar). Al recargar se recupera con la cookie httpOnly de refresco. Si un pedido da 401, el cliente refresca el token y lo reintenta una vez; si varios fallan juntos, comparten un único refresco.
 - **En desarrollo, Vite reenvía `/api` a la API**, así el navegador ve un solo sitio, igual que en producción en Vercel: la cookie `sameSite: strict` funciona sin configuración extra.
+- **Cobro en dos pasos:** primero la API calcula qué meses y cuánto (vista previa) y después se registra exactamente ese mes. El monto nunca lo escribe el usuario.
+- **Los filtros del listado viven en la URL** (`?estado=VENCIDO&busqueda=lopez`): se puede recargar, volver desde la ficha o compartir el link sin perderlos.
+- **TanStack Query** guarda en caché lo que trae la API; después de cobrar, editar o anular se invalida todo lo de socios, así el listado, el resumen y la ficha quedan al día.
+- **PWA instalable:** manifest e íconos, y un service worker propio (`public/sw.js`) que **nunca guarda la API en caché** (cuotas y pagos tienen que ser siempre los reales). Guarda los archivos de Vite (llevan un hash en el nombre) y la última versión de la página para abrir sin conexión. Solo se registra en producción: para probarlo, `npm run build` y `npm run preview -w @gimnasio/web` (http://localhost:4173).
 - **Las rutas protegidas son solo comodidad**: la seguridad real está en la API, que valida el rol en cada pedido.
 
 ## Tests
