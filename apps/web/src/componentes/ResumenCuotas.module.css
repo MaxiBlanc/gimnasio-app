@@ -1,0 +1,73 @@
+.resumen {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Color de cada estado, en un solo lugar. */
+[data-estado='AL_DIA'] {
+  --color-estado: var(--al-dia);
+}
+[data-estado='POR_VENCER'] {
+  --color-estado: var(--por-vencer);
+}
+[data-estado='PENDIENTE'] {
+  --color-estado: var(--pendiente);
+}
+[data-estado='VENCIDO'] {
+  --color-estado: var(--vencido);
+}
+
+.barra {
+  display: flex;
+  gap: 3px;
+  height: 0.875rem;
+}
+.segmento {
+  flex-basis: 0;
+  min-width: 0.5rem;
+  border-radius: 3px;
+  background: var(--color-estado);
+}
+.vacia {
+  flex: 1;
+  border-radius: 3px;
+  background: var(--linea);
+}
+
+.detalle {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+}
+.estado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.875rem;
+  border-left: 4px solid var(--color-estado);
+}
+.estado dt {
+  font-weight: 650;
+}
+.estado dd {
+  margin: 0;
+}
+.cantidad {
+  order: -1;
+  font-size: 3rem;
+}
+.descripcion {
+  font-size: 0.875rem;
+  color: var(--tinta-suave);
+  line-height: 1.35;
+}
+
+@media (max-width: 40rem) {
+  .detalle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cantidad {
+    font-size: 2.5rem;
+  }
+}

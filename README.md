@@ -43,23 +43,23 @@ Los valores entre paréntesis son los de por defecto; cada gimnasio los configur
 
 ## Stack
 
-| Capa          | Tecnología                                       |
-| ------------- | ------------------------------------------------ |
-| Frontend      | React + TypeScript (Vite), PWA                   |
-| Backend       | Node.js + Express 5 + TypeScript                 |
-| Base de datos | PostgreSQL + Prisma                              |
-| Validación    | Zod (esquemas compartidos entre front y back)    |
-| Autenticación | JWT con roles + refresh token en cookie httpOnly |
-| Tests         | Vitest + Supertest                               |
-| Desarrollo    | Docker (Postgres y Mailpit)                      |
-| Deploy        | Vercel + Neon                                    |
+| Capa          | Tecnología                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| Frontend      | React 19 + TypeScript (Vite), React Router, TanStack Query, React Hook Form, CSS Modules |
+| Backend       | Node.js + Express 5 + TypeScript                                                         |
+| Base de datos | PostgreSQL + Prisma                                                                      |
+| Validación    | Zod (esquemas compartidos entre front y back)                                            |
+| Autenticación | JWT con roles + refresh token en cookie httpOnly                                         |
+| Tests         | Vitest + Supertest                                                                       |
+| Desarrollo    | Docker (Postgres y Mailpit)                                                              |
+| Deploy        | Vercel + Neon                                                                            |
 
 ## Estructura
 
 ```
 apps/
   api/                 Backend (Express)
-  web/                 Frontend (React)          ← próximamente
+  web/                 Frontend (React)
 packages/
   compartido/          Tipos, constantes y esquemas usados por api y web
 docker-compose.yml     Postgres de desarrollo, Postgres de tests y Mailpit
@@ -78,9 +78,10 @@ npm run db:levantar      # levanta Postgres y Mailpit en Docker
 npm run db:migrar        # crea las tablas
 npm run db:seed          # carga los datos de prueba
 npm run dev:api          # API en http://localhost:3000
+npm run dev:web          # (en otra terminal) web en http://localhost:5173
 ```
 
-Probar que la API responde: <http://localhost:3000/api/salud>
+Probar que la API responde: <http://localhost:3000/api/salud>. La app se usa desde <http://localhost:5173>.
 
 > **Windows / PowerShell:** si aparece _"la ejecución de scripts está deshabilitada"_, usá `npm.cmd` en lugar de `npm`, o habilitá los scripts para tu usuario con `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
@@ -89,6 +90,8 @@ Probar que la API responde: <http://localhost:3000/api/salud>
 | Script                | Qué hace                                                               |
 | --------------------- | ---------------------------------------------------------------------- |
 | `npm run dev:api`     | Levanta la API y la reinicia al guardar cambios                        |
+| `npm run dev:web`     | Levanta la web (Vite) con recarga instantánea                          |
+| `npm run build`       | Compila la web para producción (en `apps/web/dist`)                    |
 | `npm test`            | Corre los tests de todos los paquetes                                  |
 | `npm run typecheck`   | Verifica los tipos de TypeScript                                       |
 | `npm run lint`        | Revisa el código con ESLint                                            |
@@ -179,6 +182,16 @@ Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da
 - **Filtro por estado:** `?estado=VENCIDO` lista los morosos. El filtro se resuelve **en SQL** (no trae todos los socios a memoria) y un test verifica que coincida, socio por socio, con la regla de la función pura.
 - **Resumen:** `resumen-cuotas` devuelve cuántos socios activos hay en cada estado.
 
+### Activación de la cuenta del socio
+
+1. Al dar de alta un socio, se le manda un **mail con un link** para crear su contraseña (vence en 7 días).
+2. El socio abre el link y elige su contraseña. El link **sirve una sola vez**.
+3. Recepción puede **reenviar** el mail; el link anterior deja de servir.
+
+Así, para crear la contraseña hay que tener acceso al mail del socio: no alcanza con saber su DNI. Si el mail no se puede enviar, el socio se crea igual y la API devuelve `correoEnviado: false`.
+
+En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en <http://localhost:8025>.
+
 ## Configuración del gimnasio
 
 `GET /api/mi-gimnasio` (todo el personal) y `PATCH /api/mi-gimnasio` (solo el dueño).
@@ -194,16 +207,6 @@ Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da
 | `capacidadMaxima`      |      —      | Para mostrar la ocupación como porcentaje             |
 
 Siempre es el gimnasio **del token**: un dueño no puede tocar la configuración de otro gimnasio. El nombre y el slug solo los cambia el súper-admin.
-
-### Activación de la cuenta del socio
-
-1. Al dar de alta un socio, se le manda un **mail con un link** para crear su contraseña (vence en 7 días).
-2. El socio abre el link y elige su contraseña. El link **sirve una sola vez**.
-3. Recepción puede **reenviar** el mail; el link anterior deja de servir.
-
-Así, para crear la contraseña hay que tener acceso al mail del socio: no alcanza con saber su DNI. Si el mail no se puede enviar, el socio se crea igual y la API devuelve `correoEnviado: false`.
-
-En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en <http://localhost:8025>.
 
 ## Pagos
 
@@ -228,6 +231,29 @@ En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en 
 - **Solo el dueño anula** pagos, con un motivo. El pago anulado no se borra (queda quién, cuándo y por qué) y el mes queda libre para cargar el pago correcto.
 - La forma de pago (efectivo, transferencia, otro) es **solo informativa**: la app no procesa cobros.
 
+## Web
+
+La app web está en `apps/web`. Rutas:
+
+| Ruta              | Qué es                                                          |
+| ----------------- | --------------------------------------------------------------- |
+| `/`               | Elegir el gimnasio (recuerda el último que usaste)              |
+| `/g/:slug`        | Login del personal de ese gimnasio, con su nombre y sus colores |
+| `/panel`          | Panel del personal                                              |
+| `/admin/ingresar` | Login del súper-admin                                           |
+| `/admin`          | Panel del súper-admin                                           |
+
+Decisiones:
+
+- **Primero el gimnasio, después el login.** `/g/power-gym` pide la marca a `GET /api/publico/gimnasios/:slug` (público: solo nombre, logo y colores) y muestra la pantalla con los colores del gimnasio antes de entrar.
+- **Cada gimnasio con su marca.** Los colores se pasan a variables CSS (`--marca`, `--marca-oscura`). El color del texto sobre la marca (negro o blanco) se calcula con la fórmula de contraste de WCAG, así un gimnasio amarillo no queda con botones ilegibles.
+- **Estados de la cuota con los colores de los discos olímpicos:** verde (al día), amarillo (por vencer), azul (pendiente) y rojo (vencido). Se usan igual en toda la app.
+- **Tipografía:** Archivo, una sola familia con eje de ancho: angosta y pesada para títulos y números (como la rotulación de un gimnasio), normal para el texto. Se sirve desde el propio sitio (sin Google Fonts), así funciona también sin conexión cuando sea PWA.
+- **Modo claro y oscuro:** sigue al dispositivo, o se elige con el botón del panel.
+- **El token de acceso vive solo en memoria**, no en `localStorage` (donde un script inyectado lo podría robar). Al recargar se recupera con la cookie httpOnly de refresco. Si un pedido da 401, el cliente refresca el token y lo reintenta una vez; si varios fallan juntos, comparten un único refresco.
+- **En desarrollo, Vite reenvía `/api` a la API**, así el navegador ve un solo sitio, igual que en producción en Vercel: la cookie `sameSite: strict` funciona sin configuración extra.
+- **Las rutas protegidas son solo comodidad**: la seguridad real está en la API, que valida el rol en cada pedido.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.
@@ -245,7 +271,7 @@ En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en 
 
 Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo.
 
-**Personal** — contraseña de todos: `Gimnasio123`
+**Personal** — contraseña de todos: `Gimnasio123`. El personal entra por <http://localhost:5173/g/power-gym> (o `/g/titan-fitness`); el súper-admin por <http://localhost:5173/admin/ingresar>.
 
 | Rol                 | Gimnasio      | Email                    |
 | ------------------- | ------------- | ------------------------ |

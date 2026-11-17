@@ -56,8 +56,8 @@ async function main() {
     data: {
       nombre: 'Power Gym',
       slug: 'power-gym',
-      colorPrimario: '#E4FF3A',
-      colorSecundario: '#111111',
+      colorPrimario: '#FFC300',
+      colorSecundario: '#1A1E23',
       capacidadMaxima: 80,
     },
   });

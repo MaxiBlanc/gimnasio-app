@@ -1,0 +1,24 @@
+/* Estructura común de las páginas del panel. */
+.pagina {
+  display: grid;
+  gap: 2.5rem;
+}
+.encabezado {
+  display: grid;
+  gap: 0.25rem;
+}
+.fecha::first-letter {
+  text-transform: uppercase;
+}
+.seccion {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+.tituloSeccion {
+  font-size: 1.125rem;
+  font-weight: 700;
+}

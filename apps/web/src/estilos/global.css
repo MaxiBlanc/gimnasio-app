@@ -1,0 +1,265 @@
+/*
+ * Estilos globales: tokens de diseño, reset y controles base (botón, campo).
+ * Los estilos de cada pantalla viven en su propio archivo .module.css.
+ *
+ * Idea visual: el piso de goma del gimnasio (fondos grises fríos, no crema) y los
+ * colores de los discos olímpicos para los estados de la cuota: verde, amarillo, azul, rojo.
+ * El color de acento NO es nuestro: es el color de marca de cada gimnasio (--marca).
+ */
+
+/* ───────────── Tokens: modo claro ───────────── */
+:root {
+  --fondo: #eceef1; /* tiza */
+  --superficie: #ffffff;
+  --superficie-2: #f5f6f8;
+  --tinta: #1a1e23; /* goma */
+  --tinta-suave: #5a626e;
+  --linea: #d3d8de;
+  --linea-fuerte: #b5bcc6;
+
+  /* Estados de la cuota (colores de discos). "-fondo" es la versión suave para etiquetas. */
+  --al-dia: #17804a;
+  --al-dia-fondo: #dcf2e5;
+  --por-vencer: #8a6100;
+  --por-vencer-fondo: #fdf0c7;
+  --pendiente: #22559e;
+  --pendiente-fondo: #dde8f8;
+  --vencido: #b8222f;
+  --vencido-fondo: #fbe0e2;
+
+  /* La marca del gimnasio. La pisa la app al cargar el gimnasio (ver tema/marca.ts). */
+  --marca: #2f6bff;
+  --sobre-marca: #ffffff;
+  --marca-oscura: #1a1e23;
+
+  --fuente: 'Archivo Variable', system-ui, sans-serif;
+  --radio-chico: 6px;
+  --radio: 10px;
+  --sombra: 0 1px 2px rgb(26 30 35 / 0.06), 0 8px 24px -12px rgb(26 30 35 / 0.18);
+  --foco: 0 0 0 3px color-mix(in srgb, var(--marca) 55%, transparent);
+
+  color-scheme: light;
+}
+
+/* ───────────── Tokens: modo oscuro ───────────── */
+/* Se aplica si el sistema está en oscuro (y el usuario no eligió claro), o si eligió oscuro. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    --fondo: #14171b;
+    --superficie: #1d2126;
+    --superficie-2: #23282e;
+    --tinta: #e8ebee;
+    --tinta-suave: #99a2ad;
+    --linea: #2f353c;
+    --linea-fuerte: #434b54;
+    --al-dia: #5fd394;
+    --al-dia-fondo: #15362a;
+    --por-vencer: #f5c84c;
+    --por-vencer-fondo: #3b3115;
+    --pendiente: #8cb4f2;
+    --pendiente-fondo: #1c2d47;
+    --vencido: #ff8a92;
+    --vencido-fondo: #45191e;
+    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-tema='oscuro'] {
+  --fondo: #14171b;
+  --superficie: #1d2126;
+  --superficie-2: #23282e;
+  --tinta: #e8ebee;
+  --tinta-suave: #99a2ad;
+  --linea: #2f353c;
+  --linea-fuerte: #434b54;
+  --al-dia: #5fd394;
+  --al-dia-fondo: #15362a;
+  --por-vencer: #f5c84c;
+  --por-vencer-fondo: #3b3115;
+  --pendiente: #8cb4f2;
+  --pendiente-fondo: #1c2d47;
+  --vencido: #ff8a92;
+  --vencido-fondo: #45191e;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+/* ───────────── Reset mínimo ───────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: var(--fuente);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+img {
+  display: block;
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: none;
+  box-shadow: var(--foco);
+}
+
+/* ───────────── Tipografía ───────────── */
+/* Títulos y números: Archivo angosta y pesada, como la rotulación de un gimnasio. */
+.titular {
+  font-stretch: 68%;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+.titulo-pagina {
+  font-stretch: 72%;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.375rem);
+  line-height: 1.05;
+}
+.numero {
+  font-variant-numeric: tabular-nums;
+}
+.texto-suave {
+  color: var(--tinta-suave);
+}
+
+/* ───────────── Botones ───────────── */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio-chico);
+  font-weight: 650;
+  font-stretch: 90%;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms,
+    border-color 120ms,
+    transform 80ms;
+}
+.boton:active {
+  transform: translateY(1px);
+}
+.boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+.boton-principal {
+  background: var(--marca);
+  color: var(--sobre-marca);
+}
+.boton-principal:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--marca) 88%, var(--tinta));
+}
+.boton-secundario {
+  background: var(--superficie);
+  border-color: var(--linea-fuerte);
+}
+.boton-secundario:hover:not(:disabled) {
+  background: var(--superficie-2);
+}
+.boton-fantasma {
+  background: transparent;
+  color: var(--tinta-suave);
+}
+.boton-fantasma:hover:not(:disabled) {
+  background: var(--superficie-2);
+  color: var(--tinta);
+}
+.boton-icono {
+  width: 2.75rem;
+  padding: 0;
+}
+
+/* ───────────── Campos de formulario ───────────── */
+.campo {
+  display: grid;
+  gap: 0.375rem;
+}
+.campo label {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-chico);
+  background: var(--superficie);
+}
+.campo input:focus-visible,
+.campo select:focus-visible,
+.campo textarea:focus-visible {
+  border-color: var(--tinta);
+}
+.campo [aria-invalid='true'] {
+  border-color: var(--vencido);
+}
+.campo-error {
+  color: var(--vencido);
+  font-size: 0.875rem;
+}
+
+/* Mensaje de error general de un formulario (no de un campo puntual). */
+.alerta-error {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radio-chico);
+  background: var(--vencido-fondo);
+  color: var(--vencido);
+  font-weight: 550;
+}
+
+/* Solo para lectores de pantalla. */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}

@@ -1,0 +1,33 @@
+.encabezado {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+.form {
+  display: grid;
+  gap: 1.125rem;
+}
+.form :global(.boton-principal) {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.enlace {
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+.continuar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--superficie-2);
+  text-decoration: none;
+}
+.continuar:hover {
+  border-color: var(--tinta);
+}

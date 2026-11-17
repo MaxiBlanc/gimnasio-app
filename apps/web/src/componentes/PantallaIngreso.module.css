@@ -1,0 +1,93 @@
+.pantalla {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(22rem, 1fr);
+  min-height: 100dvh;
+}
+
+/* ── La pared ── */
+.pared {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2rem;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  background: var(--marca-oscura);
+  color: var(--sobre-marca-oscura);
+  overflow: hidden;
+}
+/* Una franja diagonal suave, como la cinta de demarcación del piso. */
+.pared::before {
+  content: '';
+  position: absolute;
+  inset: auto -10% 18% -10%;
+  height: 22%;
+  background: var(--marca);
+  opacity: 0.07;
+  transform: skewY(-8deg);
+}
+
+.logo {
+  position: absolute;
+  top: clamp(1.5rem, 4vw, 3.5rem);
+  left: clamp(1.5rem, 4vw, 3.5rem);
+  max-height: 3.5rem;
+  max-width: 50%;
+  object-fit: contain;
+}
+
+/* El nombre ocupa todo el ancho: el tamaño lo calcula PantallaIngreso.tsx midiendo el texto. */
+.nombre {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--color-nombre);
+  text-transform: uppercase;
+}
+.nombre span {
+  white-space: nowrap;
+}
+
+.firma {
+  position: relative;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+/* ── El formulario ── */
+.lado {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem clamp(1.25rem, 4vw, 3.5rem) 2rem;
+  background: var(--superficie);
+}
+.barra {
+  display: flex;
+  justify-content: flex-end;
+}
+.formulario {
+  width: 100%;
+  max-width: 24rem;
+  margin: auto 0;
+  padding: 2rem 0;
+}
+.pie {
+  max-width: 24rem;
+  font-size: 0.9375rem;
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 52rem) {
+  .pantalla {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .pared {
+    min-height: 12rem;
+    gap: 1rem;
+  }
+  .formulario {
+    margin: 0;
+  }
+}
