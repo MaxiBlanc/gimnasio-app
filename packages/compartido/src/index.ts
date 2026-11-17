@@ -2,5 +2,6 @@
 //   import { ROLES, type Rol } from '@gimnasio/compartido';
 export * from './roles';
 export * from './auth';
+export * from './gimnasios';
 
 export const NOMBRE_APP = 'GimnasioApp';

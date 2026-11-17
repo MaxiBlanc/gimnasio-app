@@ -6,6 +6,7 @@ import { NOMBRE_APP } from '@gimnasio/compartido';
 import { entorno } from './config/entorno';
 import { manejarErrores, rutaNoEncontrada } from './middlewares/manejarErrores';
 import { rutasAuth } from './modulos/auth/auth.rutas';
+import { rutasAdmin } from './modulos/admin/admin.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -25,6 +26,7 @@ export function crearApp() {
   });
 
   app.use('/api/auth', rutasAuth);
+  app.use('/api/admin', rutasAdmin);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

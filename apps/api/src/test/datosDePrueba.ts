@@ -1,8 +1,17 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../db';
 import { Rol } from '../generated/prisma/enums';
+import { firmarTokenAcceso } from '../modulos/auth/tokens';
 
 export const CONTRASENA_PRUEBA = 'Clave1234';
+
+/**
+ * Header Authorization listo para usar en un test, firmado directamente (sin pasar por /login).
+ * El login ya tiene sus propios tests; acá solo queremos "ser" ese usuario.
+ */
+export function autorizacionDe(usuario: { id: string; rol: Rol; gimnasioId: string | null }) {
+  return `Bearer ${firmarTokenAcceso({ usuarioId: usuario.id, rol: usuario.rol, gimnasioId: usuario.gimnasioId })}`;
+}
 
 /**
  * Vacía todas las tablas de la base de tests.

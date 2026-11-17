@@ -129,6 +129,20 @@ Decisiones principales:
 - **Aislamiento:** el gimnasio de cada consulta sale **del token**, nunca de datos que mande el cliente.
 - **Permisos por rol:** `permitirRoles('DUENO', 'RECEPCION')`. 401 = no estás logueado; 403 = no tenés permiso.
 
+## Panel del súper-admin
+
+Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da de alta el súper-admin.
+
+| Endpoint                         | Qué hace                                                      |
+| -------------------------------- | ------------------------------------------------------------- |
+| `GET /api/admin/gimnasios`       | Lista los gimnasios con su cantidad de socios y usuarios      |
+| `GET /api/admin/gimnasios/:id`   | Detalle de un gimnasio con su personal                        |
+| `POST /api/admin/gimnasios`      | Crea un gimnasio **y su dueño** en una sola transacción       |
+| `PATCH /api/admin/gimnasios/:id` | Edita nombre, logo y colores, o lo suspende (`activo: false`) |
+
+- El **slug** (la dirección `/g/power-gym`) no se puede cambiar después, para no romper los enlaces.
+- **Suspender** un gimnasio cierra al instante las sesiones de todo su personal y sus socios.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.
