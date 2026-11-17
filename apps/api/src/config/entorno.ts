@@ -11,6 +11,10 @@ const esquemaEntorno = z.object({
   PUERTO: z.coerce.number().int().positive().default(3000),
   ORIGEN_WEB: z.url().default('http://localhost:5173'),
   DATABASE_URL: z.string().startsWith('postgresql://', 'Debe ser una URL de PostgreSQL'),
+  // Clave con la que se firman los JWT. Si alguien la conoce, puede fabricar tokens válidos.
+  JWT_SECRETO: z.string().min(32, 'Debe tener al menos 32 caracteres'),
+  MINUTOS_TOKEN_ACCESO: z.coerce.number().int().positive().default(15),
+  DIAS_TOKEN_REFRESCO: z.coerce.number().int().positive().default(30),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

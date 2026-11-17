@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
+import { ZodError } from 'zod';
 import { ErrorApp } from '../errores';
 
 /** Responde 404 a cualquier ruta que no exista. */
@@ -14,6 +15,30 @@ export const rutaNoEncontrada: RequestHandler = (_req, res) => {
 export const manejarErrores: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof ErrorApp) {
     res.status(error.estadoHttp).json({ error: { codigo: error.codigo, mensaje: error.message } });
+    return;
+  }
+
+  // Datos inválidos según un esquema de Zod: 400 con el detalle de cada campo,
+  // así la web puede mostrar el error al lado del input correspondiente.
+  if (error instanceof ZodError) {
+    res.status(400).json({
+      error: {
+        codigo: 'DATOS_INVALIDOS',
+        mensaje: 'Revisá los datos ingresados',
+        campos: error.issues.map((problema) => ({
+          campo: problema.path.join('.'),
+          mensaje: problema.message,
+        })),
+      },
+    });
+    return;
+  }
+
+  // El body no es un JSON válido (lo detecta express.json()).
+  if (error instanceof SyntaxError && 'body' in error) {
+    res
+      .status(400)
+      .json({ error: { codigo: 'JSON_INVALIDO', mensaje: 'El cuerpo no es un JSON válido' } });
     return;
   }
 

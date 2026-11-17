@@ -15,6 +15,8 @@ Sistema de gestión para gimnasios pensado como **SaaS multi-gimnasio**: una sol
 
 Los pagos se **registran** en el sistema; la app no cobra ni se integra con medios de pago.
 
+El proyecto está pensado para funcionar **con costo cero** usando planes gratuitos (Vercel, Neon, Resend). Por eso, por ejemplo, el logo de cada gimnasio se carga como **URL de una imagen** en lugar de subir el archivo.
+
 ### Reglas de la cuota
 
 La cuota se cobra por **mes calendario** (del 1 al último día). Un plan trimestral cubre 3 meses seguidos.
@@ -110,6 +112,26 @@ Decisiones principales:
 - **Los pagos no se borran:** se anulan registrando quién, cuándo y por qué.
 - **Montos en `DECIMAL`**, nunca en coma flotante.
 - **IDs UUID v7:** no se pueden adivinar y se ordenan por fecha de creación.
+
+## Autenticación
+
+| Endpoint                     | Qué hace                                                           |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `POST /api/auth/login`       | Login del personal: `{ gimnasio: "power-gym", email, contrasena }` |
+| `POST /api/auth/admin/login` | Login del súper-admin: `{ email, contrasena }`                     |
+| `POST /api/auth/refrescar`   | Canjea la cookie de refresco por un token de acceso nuevo          |
+| `POST /api/auth/salir`       | Cierra la sesión (revoca la cookie de refresco)                    |
+| `GET /api/auth/yo`           | Devuelve el usuario logueado                                       |
+
+- **Dos tokens.** El de **acceso** es un JWT de 15 minutos que viaja en `Authorization: Bearer …`. El de **refresco** dura 30 días, vive en una cookie `httpOnly` (el JavaScript de la página no la puede leer) y se guarda **hasheado** en la tabla `sesiones`, así que se puede revocar.
+- **Rotación:** cada vez que se usa el token de refresco, se revoca y se entrega uno nuevo.
+- **Sin pistas para atacantes:** email inexistente, contraseña incorrecta o usuario desactivado devuelven el mismo error y tardan lo mismo.
+- **Aislamiento:** el gimnasio de cada consulta sale **del token**, nunca de datos que mande el cliente.
+- **Permisos por rol:** `permitirRoles('DUENO', 'RECEPCION')`. 401 = no estás logueado; 403 = no tenés permiso.
+
+## Tests
+
+`npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.
 
 ### Servicios de desarrollo
 
