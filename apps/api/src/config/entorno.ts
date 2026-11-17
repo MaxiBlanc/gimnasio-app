@@ -10,6 +10,7 @@ const esquemaEntorno = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PUERTO: z.coerce.number().int().positive().default(3000),
   ORIGEN_WEB: z.url().default('http://localhost:5173'),
+  DATABASE_URL: z.string().startsWith('postgresql://', 'Debe ser una URL de PostgreSQL'),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

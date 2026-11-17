@@ -1,0 +1,263 @@
+// Esquema de la base de datos de GimnasioApp.
+//
+// Convenciones:
+// - Modelos en PascalCase singular (Socio) → tablas en snake_case plural (socios) con @@map.
+// - Campos en camelCase (gimnasioId) → columnas en snake_case (gimnasio_id) con @map.
+//   Así en TypeScript escribimos como en JS y en SQL como es costumbre en Postgres.
+// - IDs UUID v7: no se pueden adivinar (nadie prueba /socios/1, /socios/2...) y,
+//   a diferencia del UUID v4, se ordenan por fecha de creación.
+// - Plata en Decimal(12,2), nunca Float: 0.1 + 0.2 !== 0.3 en coma flotante.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Rol {
+  SUPERADMIN
+  DUENO
+  RECEPCION
+  PROFESOR
+  KIOSCO
+
+  @@map("rol")
+}
+
+enum TipoDescuento {
+  PORCENTAJE
+  MONTO_FIJO
+
+  @@map("tipo_descuento")
+}
+
+enum FormaPago {
+  EFECTIVO
+  TRANSFERENCIA
+  OTRO
+
+  @@map("forma_pago")
+}
+
+enum TipoTokenSocio {
+  ACTIVACION
+  RECUPERACION
+
+  @@map("tipo_token_socio")
+}
+
+// ──────────────────────────── Gimnasios ────────────────────────────
+
+/// Cada gimnasio es un "tenant": todas las tablas de negocio cuelgan de acá.
+model Gimnasio {
+  id                   String   @id @default(uuid(7)) @db.Uuid
+  nombre               String
+  /// Identificador para la URL: /g/power-gym
+  slug                 String   @unique
+  logoUrl              String?  @map("logo_url")
+  colorPrimario        String   @default("#E4FF3A") @map("color_primario")
+  colorSecundario      String   @default("#111111") @map("color_secundario")
+  /// Cuánto tiempo cuenta un ingreso como "presente" para la ocupación.
+  minutosPermanencia   Int      @default(90) @map("minutos_permanencia")
+  /// Día del mes a partir del cual una cuota impaga pasa a "vencida".
+  diaCierreCobro       Int      @default(10) @map("dia_cierre_cobro")
+  /// Días antes de fin de mes en que una cuota pasa a "por vencer".
+  diasAvisoVencimiento Int      @default(5) @map("dias_aviso_vencimiento")
+  capacidadMaxima      Int?     @map("capacidad_maxima")
+  activo               Boolean  @default(true)
+  creadoEn             DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn        DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  usuarios    Usuario[]
+  socios      Socio[]
+  planes      Plan[]
+  descuentos  Descuento[]
+  pagos       Pago[]
+  tokensSocio TokenSocio[]
+
+  @@map("gimnasios")
+}
+
+// ───────────────────────────── Usuarios ─────────────────────────────
+
+/// Personal del gimnasio (dueño, recepción, profe, pantalla de ingreso) y el súper-admin.
+/// Los socios NO están acá: tienen su propia tabla y su propio login.
+model Usuario {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  /// NULL solo para el súper-admin (lo garantiza un CHECK en la migración).
+  gimnasioId     String?  @map("gimnasio_id") @db.Uuid
+  nombre         String
+  email          String
+  hashContrasena String   @map("hash_contrasena")
+  rol            Rol
+  activo         Boolean  @default(true)
+  creadoEn       DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn  DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio         Gimnasio? @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  sesiones         Sesion[]
+  pagosRegistrados Pago[]    @relation("PagoRegistradoPor")
+  pagosAnulados    Pago[]    @relation("PagoAnuladoPor")
+
+  // El mismo email puede existir en dos gimnasios distintos, pero no dos veces en el mismo.
+  @@unique([gimnasioId, email])
+  @@map("usuarios")
+}
+
+/// Sesiones abiertas (refresh tokens). Guardamos solo el HASH del token: si alguien
+/// roba la base, no puede usar los tokens. Pertenece a un usuario O a un socio.
+model Sesion {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  usuarioId  String?   @map("usuario_id") @db.Uuid
+  socioId    String?   @map("socio_id") @db.Uuid
+  hashToken  String    @unique @map("hash_token")
+  expiraEn   DateTime  @map("expira_en") @db.Timestamptz(3)
+  revocadaEn DateTime? @map("revocada_en") @db.Timestamptz(3)
+  creadoEn   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  socio   Socio?   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+
+  @@map("sesiones")
+}
+
+// ───────────────────────────── Planes y descuentos ─────────────────────────────
+
+model Plan {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId    String   @map("gimnasio_id") @db.Uuid
+  nombre        String
+  precio        Decimal  @db.Decimal(12, 2)
+  /// Cuántos meses calendario cubre un pago de este plan (1 = mensual, 3 = trimestral...).
+  duracionMeses Int      @map("duracion_meses")
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socios   Socio[]
+  pagos    Pago[]
+
+  @@unique([gimnasioId, nombre])
+  // Necesario para las claves foráneas compuestas (ver Socio y Pago).
+  @@unique([id, gimnasioId])
+  @@map("planes")
+}
+
+model Descuento {
+  id            String        @id @default(uuid(7)) @db.Uuid
+  gimnasioId    String        @map("gimnasio_id") @db.Uuid
+  nombre        String
+  tipo          TipoDescuento
+  /// Si es PORCENTAJE: 10 = 10%. Si es MONTO_FIJO: pesos a restar.
+  valor         Decimal       @db.Decimal(12, 2)
+  activo        Boolean       @default(true)
+  creadoEn      DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socios   Socio[]
+
+  @@unique([gimnasioId, nombre])
+  @@unique([id, gimnasioId])
+  @@map("descuentos")
+}
+
+// ───────────────────────────── Socios ─────────────────────────────
+
+model Socio {
+  id                 String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId         String   @map("gimnasio_id") @db.Uuid
+  nombre             String
+  apellido           String
+  dni                String
+  telefono           String
+  email              String
+  emergenciaNombre   String   @map("emergencia_nombre")
+  emergenciaTelefono String   @map("emergencia_telefono")
+  planId             String   @map("plan_id") @db.Uuid
+  descuentoId        String?  @map("descuento_id") @db.Uuid
+  /// NULL hasta que el socio activa su cuenta con el link que le llega por mail.
+  hashContrasena     String?  @map("hash_contrasena")
+  /// Baja lógica: un socio dado de baja no se borra, para conservar su historial de pagos.
+  activo             Boolean  @default(true)
+  creadoEn           DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn      DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio  Gimnasio     @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  // Claves foráneas COMPUESTAS (id + gimnasio_id): la base de datos misma impide que un
+  // socio tenga asignado un plan o un descuento de OTRO gimnasio, aunque el código tenga un bug.
+  plan      Plan         @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  descuento Descuento?   @relation(fields: [descuentoId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  pagos     Pago[]
+  sesiones  Sesion[]
+  tokens    TokenSocio[]
+
+  // El DNI es único DENTRO de un gimnasio: la misma persona puede ser socia de dos gimnasios.
+  @@unique([gimnasioId, dni])
+  @@unique([id, gimnasioId])
+  @@index([gimnasioId, apellido, nombre])
+  @@map("socios")
+}
+
+/// Tokens de un solo uso que se mandan por mail: activar la cuenta o recuperar la contraseña.
+model TokenSocio {
+  id         String         @id @default(uuid(7)) @db.Uuid
+  gimnasioId String         @map("gimnasio_id") @db.Uuid
+  socioId    String         @map("socio_id") @db.Uuid
+  tipo       TipoTokenSocio
+  hashToken  String         @unique @map("hash_token")
+  expiraEn   DateTime       @map("expira_en") @db.Timestamptz(3)
+  usadoEn    DateTime?      @map("usado_en") @db.Timestamptz(3)
+  creadoEn   DateTime       @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socio    Socio    @relation(fields: [socioId, gimnasioId], references: [id, gimnasioId], onDelete: Cascade)
+
+  @@map("tokens_socio")
+}
+
+// ───────────────────────────── Pagos ─────────────────────────────
+
+/// Registro de un pago. Cubre meses calendario completos: del 1° de `periodoDesde`
+/// al último día de `periodoHasta`. El vencimiento del socio se CALCULA a partir de
+/// sus pagos no anulados (no se guarda aparte, para que nunca quede desincronizado).
+model Pago {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  gimnasioId      String    @map("gimnasio_id") @db.Uuid
+  socioId         String    @map("socio_id") @db.Uuid
+  planId          String    @map("plan_id") @db.Uuid
+  /// Primer día del primer mes cubierto (ej. 2026-11-01).
+  periodoDesde    DateTime  @map("periodo_desde") @db.Date
+  /// Último día del último mes cubierto (ej. 2026-11-30).
+  periodoHasta    DateTime  @map("periodo_hasta") @db.Date
+  // Montos "congelados" al momento del pago: si después cambia el precio del plan
+  // o el descuento, el historial no se altera.
+  montoBase       Decimal   @map("monto_base") @db.Decimal(12, 2)
+  montoDescuento  Decimal   @default(0) @map("monto_descuento") @db.Decimal(12, 2)
+  montoFinal      Decimal   @map("monto_final") @db.Decimal(12, 2)
+  descuentoNombre String?   @map("descuento_nombre")
+  /// Solo informativo: la app no procesa pagos, únicamente los registra.
+  formaPago       FormaPago @map("forma_pago")
+  registradoPorId String    @map("registrado_por_id") @db.Uuid
+  /// Un pago mal cargado no se borra: se anula indicando quién y por qué.
+  anuladoEn       DateTime? @map("anulado_en") @db.Timestamptz(3)
+  anuladoPorId    String?   @map("anulado_por_id") @db.Uuid
+  motivoAnulacion String?   @map("motivo_anulacion")
+  creadoEn        DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  gimnasio      Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socio         Socio    @relation(fields: [socioId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  plan          Plan     @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  registradoPor Usuario  @relation("PagoRegistradoPor", fields: [registradoPorId], references: [id], onDelete: Restrict)
+  anuladoPor    Usuario? @relation("PagoAnuladoPor", fields: [anuladoPorId], references: [id], onDelete: Restrict)
+
+  // Consulta más frecuente: "último pago vigente de este socio".
+  @@index([gimnasioId, socioId, periodoHasta])
+  @@map("pagos")
+}

@@ -70,25 +70,46 @@ Es un **monorepo con npm workspaces**: un solo repositorio y un solo `npm instal
 Requisitos: **Node 20+** y **Docker Desktop**.
 
 ```bash
-npm install              # instala las dependencias de todo el monorepo
+npm install              # instala las dependencias y genera el cliente de Prisma
 cp .env.example .env     # variables de entorno locales
 npm run db:levantar      # levanta Postgres y Mailpit en Docker
+npm run db:migrar        # crea las tablas
+npm run db:seed          # carga los datos de prueba
 npm run dev:api          # API en http://localhost:3000
 ```
 
 Probar que la API responde: <http://localhost:3000/api/salud>
 
+> **Windows / PowerShell:** si aparece _"la ejecución de scripts está deshabilitada"_, usá `npm.cmd` en lugar de `npm`, o habilitá los scripts para tu usuario con `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
 ### Scripts útiles
 
-| Script                | Qué hace                                        |
-| --------------------- | ----------------------------------------------- |
-| `npm run dev:api`     | Levanta la API y la reinicia al guardar cambios |
-| `npm test`            | Corre los tests de todos los paquetes           |
-| `npm run typecheck`   | Verifica los tipos de TypeScript                |
-| `npm run lint`        | Revisa el código con ESLint                     |
-| `npm run formatear`   | Formatea el código con Prettier                 |
-| `npm run db:levantar` | Levanta los contenedores de Docker              |
-| `npm run db:bajar`    | Baja los contenedores                           |
+| Script                | Qué hace                                                               |
+| --------------------- | ---------------------------------------------------------------------- |
+| `npm run dev:api`     | Levanta la API y la reinicia al guardar cambios                        |
+| `npm test`            | Corre los tests de todos los paquetes                                  |
+| `npm run typecheck`   | Verifica los tipos de TypeScript                                       |
+| `npm run lint`        | Revisa el código con ESLint                                            |
+| `npm run formatear`   | Formatea el código con Prettier                                        |
+| `npm run db:levantar` | Levanta los contenedores de Docker                                     |
+| `npm run db:bajar`    | Baja los contenedores                                                  |
+| `npm run db:migrar`   | Aplica las migraciones pendientes (y crea nuevas si cambió el esquema) |
+| `npm run db:seed`     | Borra los datos y carga los de prueba                                  |
+| `npm run db:reset`    | Borra la base entera, la recrea desde cero y corre el seed             |
+| `npm run db:studio`   | Abre Prisma Studio para ver y editar la base en el navegador           |
+
+## Base de datos
+
+El esquema está en [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.prisma) y las migraciones en `apps/api/prisma/migrations`.
+
+Decisiones principales:
+
+- **Multi-gimnasio a nivel base de datos.** Las tablas de negocio llevan `gimnasio_id`, y las relaciones entre ellas usan **claves foráneas compuestas** `(id, gimnasio_id)`: Postgres impide, por ejemplo, asignar a un socio un plan de otro gimnasio.
+- **Reglas del negocio como restricciones** (`CHECK` y `EXCLUDE`), escritas a mano en la migración inicial: un pago cubre meses completos, los montos cierran (`final = base - descuento`), y un socio **no puede tener dos pagos vigentes para el mismo mes**.
+- **El vencimiento se calcula** a partir de los pagos no anulados; no se guarda aparte.
+- **Los pagos no se borran:** se anulan registrando quién, cuándo y por qué.
+- **Montos en `DECIMAL`**, nunca en coma flotante.
+- **IDs UUID v7:** no se pueden adivinar y se ordenan por fecha de creación.
 
 ### Servicios de desarrollo
 
@@ -101,4 +122,29 @@ Probar que la API responde: <http://localhost:3000/api/salud>
 
 ## Usuarios de prueba
 
-Se cargan con el seed (próximamente).
+Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo.
+
+**Personal** — contraseña de todos: `Gimnasio123`
+
+| Rol                 | Gimnasio      | Email                    |
+| ------------------- | ------------- | ------------------------ |
+| Súper-admin         | —             | `admin@gimnasioapp.com`  |
+| Dueño               | Power Gym     | `dueno@powergym.com`     |
+| Recepción           | Power Gym     | `recepcion@powergym.com` |
+| Profesor            | Power Gym     | `profe@powergym.com`     |
+| Pantalla de ingreso | Power Gym     | `ingreso@powergym.com`   |
+| Dueña               | Titan Fitness | `duena@titanfitness.com` |
+
+**Socios de Power Gym** (cada uno es un caso de prueba):
+
+| Socio          | DNI        | Situación                                             |
+| -------------- | ---------- | ----------------------------------------------------- |
+| Juan Pérez     | `30111222` | Al día. **Cuenta activada:** contraseña `Socio1234`   |
+| María Gómez    | `32444555` | Al día con plan trimestral                            |
+| Sofía Martínez | `41222333` | Al día con descuento de estudiante (10%)              |
+| Valentina Díaz | `39123456` | Ya pagó el mes que viene                              |
+| Carlos López   | `28999000` | Debe el mes actual (pendiente o vencido según el día) |
+| Diego Ruiz     | `35666777` | Debe dos meses y tiene un pago anulado                |
+| Ana Torres     | `44888999` | Recién anotada, nunca pagó                            |
+
+Titan Fitness tiene un socio con el **mismo DNI** que Juan Pérez, para comprobar que el DNI es único por gimnasio y que los datos no se mezclan.

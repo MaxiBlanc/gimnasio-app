@@ -16,3 +16,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .vercel
+
+# Cliente de Prisma generado (se regenera con "prisma generate")
+apps/api/src/generated/
