@@ -185,6 +185,29 @@ Así, para crear la contraseña hay que tener acceso al mail del socio: no alcan
 
 En desarrollo los mails **no salen a internet**: los atrapa Mailpit y se ven en <http://localhost:8025>.
 
+## Pagos
+
+| Endpoint                                        | Dueño | Recepción |
+| ----------------------------------------------- | :---: | :-------: |
+| `GET /api/socios/:id/pagos`                     |  ✅   |    ✅     |
+| `GET /api/socios/:id/pagos/vista-previa?desde=` |  ✅   |    ✅     |
+| `POST /api/socios/:id/pagos`                    |  ✅   |    ✅     |
+| `POST /api/pagos/:id/anular`                    |  ✅   |           |
+
+**Qué meses cubre un pago:** meses calendario completos, según la duración del plan. Si no se indica `desde`:
+
+- Si el socio **ya tiene pagado** el mes actual (o más), se cobra **el mes siguiente** a lo último pagado.
+- Si **no** lo tiene, se cobra **el mes actual**. Los meses que no vino no se cobran.
+
+**Cuánto se cobra:** lo calcula la API (nunca lo manda el cliente) con el precio del plan y el descuento activo del socio. Se calcula en **centavos enteros** para evitar errores de redondeo, y los montos quedan **guardados en el pago**: si después cambia el precio, el historial no se altera.
+
+**Reglas:**
+
+- Un socio **no puede tener dos pagos vigentes para el mismo mes**. Lo controla la API (error claro) y, por si dos personas cobran a la vez, también la base (restricción `EXCLUDE`).
+- No se cobra a socios dados de baja ni con un plan desactivado.
+- **Solo el dueño anula** pagos, con un motivo. El pago anulado no se borra (queda quién, cuándo y por qué) y el mes queda libre para cargar el pago correcto.
+- La forma de pago (efectivo, transferencia, otro) es **solo informativa**: la app no procesa cobros.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.

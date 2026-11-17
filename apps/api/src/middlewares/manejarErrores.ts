@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { ErrorApp } from '../errores';
-import { Prisma } from '../generated/prisma/client';
+import { esViolacionDeUnicidad } from '../erroresBase';
 
 /** Responde 404 a cualquier ruta que no exista. */
 export const rutaNoEncontrada: RequestHandler = (_req, res) => {
@@ -21,7 +21,7 @@ export const manejarErrores: ErrorRequestHandler = (error, _req, res, _next) => 
 
   // Red de seguridad: si la base rechaza un dato duplicado (restricción UNIQUE),
   // respondemos 409 en vez de 500. Pasa, por ejemplo, si dos pedidos crean lo mismo a la vez.
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+  if (esViolacionDeUnicidad(error)) {
     res
       .status(409)
       .json({ error: { codigo: 'YA_EXISTE', mensaje: 'Ya existe un registro con esos datos' } });

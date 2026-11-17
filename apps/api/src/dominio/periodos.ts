@@ -42,6 +42,41 @@ export function hoyEnArgentina(ahora: Date = new Date()): Date {
   return new Date(`${texto}T00:00:00Z`);
 }
 
+/** Compara dos meses: negativo si `a` es anterior, 0 si son el mismo, positivo si es posterior. */
+export function compararMeses(a: MesCalendario, b: MesCalendario): number {
+  return a.anio * 12 + a.mes - (b.anio * 12 + b.mes);
+}
+
+/** "2026-11" → { anio: 2026, mes: 11 }, y al revés. */
+export function textoAMes(texto: string): MesCalendario {
+  const [anio, mes] = texto.split('-').map(Number);
+  return { anio: anio!, mes: mes! };
+}
+export function mesATexto({ anio, mes }: MesCalendario): string {
+  return `${anio}-${String(mes).padStart(2, '0')}`;
+}
+
+/** Fecha DATE como texto "AAAA-MM-DD" (así viaja en JSON, sin hora para no confundir). */
+export function fechaATexto(fecha: Date): string {
+  return fecha.toISOString().slice(0, 10);
+}
+
+/**
+ * Primer mes que corresponde cobrar, según hasta cuándo tiene pago el socio:
+ *
+ * - Nunca pagó, o lo último que pagó ya pasó → el MES ACTUAL. Los meses que no vino
+ *   no se cobran (lo decidimos así: el período corre desde que vuelve a pagar).
+ * - Ya tiene pago el mes actual o más adelante → el mes SIGUIENTE a lo último pagado
+ *   (pago adelantado).
+ */
+export function primerMesAPagar(ultimoPagoHasta: Date | null, hoy: Date): MesCalendario {
+  const mesActual = mesDeFecha(hoy);
+  if (!ultimoPagoHasta) return mesActual;
+
+  const ultimoMesPago = mesDeFecha(ultimoPagoHasta);
+  return compararMeses(ultimoMesPago, mesActual) < 0 ? mesActual : sumarMeses(ultimoMesPago, 1);
+}
+
 /** Período que cubre un pago: desde el 1° del mes inicial hasta el último día del mes final. */
 export function periodoDePago(desde: MesCalendario, duracionMeses: number) {
   if (!Number.isInteger(duracionMeses) || duracionMeses < 1) {
