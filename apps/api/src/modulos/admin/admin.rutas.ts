@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { esquemaCrearGimnasio, esquemaEditarGimnasio } from '@gimnasio/compartido';
 import { autenticar, permitirRoles } from '../../middlewares/autenticar';
+import { esquemaParamId } from '../../validacion';
 import {
   crearGimnasio,
   editarGimnasio,
@@ -14,8 +14,6 @@ export const rutasAdmin = Router();
 // Todas las rutas de este router exigen estar logueado como súper-admin.
 // Al ponerlo con `use` al principio, no hay forma de olvidárselo en una ruta nueva.
 rutasAdmin.use(autenticar, permitirRoles('SUPERADMIN'));
-
-const esquemaParamId = z.object({ id: z.uuid('Id inválido') });
 
 rutasAdmin.get('/gimnasios', async (_req, res) => {
   res.json(await listarGimnasios());

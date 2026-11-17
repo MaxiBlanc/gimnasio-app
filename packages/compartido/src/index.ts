@@ -3,5 +3,6 @@
 export * from './roles';
 export * from './auth';
 export * from './gimnasios';
+export * from './planes';
 
 export const NOMBRE_APP = 'GimnasioApp';

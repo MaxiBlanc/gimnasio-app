@@ -143,6 +143,23 @@ Solo accesible con rol `SUPERADMIN`. Los gimnasios no se registran solos: los da
 - El **slug** (la dirección `/g/power-gym`) no se puede cambiar después, para no romper los enlaces.
 - **Suspender** un gimnasio cierra al instante las sesiones de todo su personal y sus socios.
 
+## Planes y descuentos
+
+| Endpoint                    | Dueño | Recepción |
+| --------------------------- | :---: | :-------: |
+| `GET /api/planes`           |  ✅   |    ✅     |
+| `POST /api/planes`          |  ✅   |           |
+| `PATCH /api/planes/:id`     |  ✅   |           |
+| `GET /api/descuentos`       |  ✅   |    ✅     |
+| `POST /api/descuentos`      |  ✅   |           |
+| `PATCH /api/descuentos/:id` |  ✅   |           |
+
+- Un plan tiene precio y **duración en meses** (1 = mensual, 3 = trimestral…).
+- Un descuento es un **porcentaje** (hasta 100 %) o un **monto fijo** en pesos.
+- No se borran: se **desactivan**, porque tienen socios y pagos asociados.
+- Cambiar el precio de un plan **no modifica los pagos ya registrados**; rige desde el próximo pago.
+- Si se pide un plan o descuento de **otro gimnasio**, la API responde 404, como si no existiera.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.
