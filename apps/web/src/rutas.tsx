@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
-import { Building2, House, Users } from 'lucide-react';
+import { Building2, House, Settings, Tags, Users } from 'lucide-react';
 import type { Rol, UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
@@ -8,7 +8,10 @@ import { InicioAdmin } from './paginas/InicioAdmin';
 import { InicioPanel } from './paginas/InicioPanel';
 import { LoginAdmin } from './paginas/LoginAdmin';
 import { LoginStaff } from './paginas/LoginStaff';
+import { Configuracion } from './paginas/configuracion/Configuracion';
+import { ErrorDePantalla } from './paginas/ErrorDePantalla';
 import { NoEncontrada } from './paginas/NoEncontrada';
+import { PlanesDescuentos } from './paginas/planes/PlanesDescuentos';
 import { SocioFicha } from './paginas/socios/SocioFicha';
 import { SocioEditar, SocioNuevo } from './paginas/socios/SocioNuevo';
 import { SociosLista } from './paginas/socios/SociosLista';
@@ -25,6 +28,8 @@ const MENU_STAFF: ItemMenu[] = [
     Icono: Users,
     roles: ['DUENO', 'RECEPCION', 'PROFESOR'],
   },
+  { ruta: '/panel/planes', etiqueta: 'Planes y descuentos', Icono: Tags, roles: ['DUENO'] },
+  { ruta: '/panel/configuracion', etiqueta: 'Configuración', Icono: Settings, roles: ['DUENO'] },
 ];
 
 const MENU_ADMIN: ItemMenu[] = [
@@ -57,39 +62,84 @@ function ConSesion({ roles, children }: PropsConSesion) {
   return children(usuario);
 }
 
+/** Dentro del panel: una pantalla solo para algunos roles (el resto vuelve al inicio). */
+function SoloRoles({ roles, children }: { roles: Rol[]; children: ReactNode }) {
+  const { usuario } = useSesion();
+  if (!usuario || !roles.includes(usuario.rol)) return <Navigate to="/panel" replace />;
+  return children;
+}
+
 export const enrutador = createBrowserRouter([
-  { path: '/', element: <ElegirGimnasio /> },
-  { path: '/g/:slug', element: <LoginStaff /> },
-  { path: '/admin/ingresar', element: <LoginAdmin /> },
   {
-    path: '/panel',
-    element: (
-      <ConSesion roles={ROLES_STAFF}>
-        {(usuario) => (
-          <LayoutPanel
-            usuario={usuario}
-            menu={MENU_STAFF}
-            alSalir={usuario.gimnasio ? `/g/${usuario.gimnasio.slug}` : '/'}
-          />
-        )}
-      </ConSesion>
-    ),
+    // Si cualquier pantalla falla, se muestra ErrorDePantalla en vez de quedar en blanco.
+    errorElement: <ErrorDePantalla />,
     children: [
-      { index: true, element: <InicioPanel /> },
-      { path: 'socios', element: <SociosLista /> },
-      { path: 'socios/nuevo', element: <SocioNuevo /> },
-      { path: 'socios/:id', element: <SocioFicha /> },
-      { path: 'socios/:id/editar', element: <SocioEditar /> },
+      { path: '/', element: <ElegirGimnasio /> },
+      { path: '/g/:slug', element: <LoginStaff /> },
+      { path: '/admin/ingresar', element: <LoginAdmin /> },
+      {
+        path: '/panel',
+        element: (
+          <ConSesion roles={ROLES_STAFF}>
+            {(usuario) => (
+              <LayoutPanel
+                usuario={usuario}
+                menu={MENU_STAFF}
+                alSalir={usuario.gimnasio ? `/g/${usuario.gimnasio.slug}` : '/'}
+              />
+            )}
+          </ConSesion>
+        ),
+        children: [
+          { index: true, element: <InicioPanel /> },
+          { path: 'socios', element: <SociosLista /> },
+          {
+            path: 'socios/nuevo',
+            element: (
+              <SoloRoles roles={['DUENO', 'RECEPCION']}>
+                <SocioNuevo />
+              </SoloRoles>
+            ),
+          },
+          { path: 'socios/:id', element: <SocioFicha /> },
+          {
+            path: 'socios/:id/editar',
+            element: (
+              <SoloRoles roles={['DUENO', 'RECEPCION']}>
+                <SocioEditar />
+              </SoloRoles>
+            ),
+          },
+          {
+            path: 'planes',
+            element: (
+              <SoloRoles roles={['DUENO']}>
+                <PlanesDescuentos />
+              </SoloRoles>
+            ),
+          },
+          {
+            path: 'configuracion',
+            element: (
+              <SoloRoles roles={['DUENO']}>
+                <Configuracion />
+              </SoloRoles>
+            ),
+          },
+        ],
+      },
+      {
+        path: '/admin',
+        element: (
+          <ConSesion roles={['SUPERADMIN']}>
+            {(usuario) => (
+              <LayoutPanel usuario={usuario} menu={MENU_ADMIN} alSalir="/admin/ingresar" />
+            )}
+          </ConSesion>
+        ),
+        children: [{ index: true, element: <InicioAdmin /> }],
+      },
+      { path: '*', element: <NoEncontrada /> },
     ],
   },
-  {
-    path: '/admin',
-    element: (
-      <ConSesion roles={['SUPERADMIN']}>
-        {(usuario) => <LayoutPanel usuario={usuario} menu={MENU_ADMIN} alSalir="/admin/ingresar" />}
-      </ConSesion>
-    ),
-    children: [{ index: true, element: <InicioAdmin /> }],
-  },
-  { path: '*', element: <NoEncontrada /> },
 ]);

@@ -346,3 +346,22 @@ a {
   background: var(--vencido);
   color: #fff;
 }
+
+/* Casilla de verificación con texto de ayuda. */
+.casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.casilla input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.1875rem;
+  accent-color: var(--tinta);
+}
+.casilla small {
+  display: block;
+  font-weight: 400;
+}
