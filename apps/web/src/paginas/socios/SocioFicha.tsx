@@ -22,6 +22,7 @@ import { useSesion } from '../../sesion/sesion';
 import estilos from '../paginas.module.css';
 import tabla from '../tabla.module.css';
 import { DialogoCobro } from './DialogoCobro';
+import { RutinasDelSocio } from '../rutinas/RutinasDelSocio';
 import propios from './SocioFicha.module.css';
 
 const AVISOS: Record<string, { texto: string; clase: string }> = {
@@ -56,6 +57,7 @@ export function SocioFicha() {
   const clienteQuery = useQueryClient();
   const puedeEditar = usuario?.rol === 'DUENO' || usuario?.rol === 'RECEPCION';
   const esDueno = usuario?.rol === 'DUENO';
+  const armaRutinas = esDueno || usuario?.rol === 'PROFESOR';
 
   const [aviso, setAviso] = useState<string | undefined>(
     (ubicacion.state as { aviso?: string } | null)?.aviso,
@@ -300,6 +302,8 @@ export function SocioFicha() {
           )}
         </section>
       )}
+
+      {armaRutinas && s.activo && <RutinasDelSocio socioId={s.id} />}
 
       {puedeEditar && (
         <section className={`${estilos.seccion} ${propios.zonaBaja}`}>

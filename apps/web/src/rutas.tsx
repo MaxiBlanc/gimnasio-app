@@ -1,6 +1,15 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
-import { Building2, House, ScanLine, Settings, Tags, Users } from 'lucide-react';
+import {
+  Building2,
+  CalendarDays,
+  Dumbbell,
+  House,
+  ScanLine,
+  Settings,
+  Tags,
+  Users,
+} from 'lucide-react';
 import type { RolSesion, UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
@@ -19,6 +28,8 @@ import { SocioFicha } from './paginas/socios/SocioFicha';
 import { SocioEditar, SocioNuevo } from './paginas/socios/SocioNuevo';
 import { SociosLista } from './paginas/socios/SociosLista';
 import { MiCuenta } from './paginas/socio/MiCuenta';
+import { EditarRutina } from './paginas/rutinas/EditarRutina';
+import { Plantillas } from './paginas/rutinas/Plantillas';
 import { TabletIngreso } from './paginas/ingreso/TabletIngreso';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
@@ -31,6 +42,13 @@ const MENU_STAFF: ItemMenu[] = [
     ruta: '/panel/socios',
     etiqueta: 'Socios',
     Icono: Users,
+    roles: ['DUENO', 'RECEPCION', 'PROFESOR'],
+  },
+  { ruta: '/panel/rutinas', etiqueta: 'Rutinas', Icono: Dumbbell, roles: ['DUENO', 'PROFESOR'] },
+  {
+    ruta: '/panel/clases',
+    etiqueta: 'Clases',
+    Icono: CalendarDays,
     roles: ['DUENO', 'RECEPCION', 'PROFESOR'],
   },
   {
@@ -139,6 +157,16 @@ export const enrutador = createBrowserRouter([
               </SoloRoles>
             ),
           },
+          ...['rutinas', 'rutinas/nueva', 'rutinas/:id', 'socios/:socioId/rutinas/nueva'].map(
+            (path) => ({
+              path,
+              element: (
+                <SoloRoles roles={['DUENO', 'PROFESOR']}>
+                  {path === 'rutinas' ? <Plantillas /> : <EditarRutina />}
+                </SoloRoles>
+              ),
+            }),
+          ),
           {
             path: 'planes',
             element: (
