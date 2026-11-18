@@ -261,6 +261,21 @@ No hay registro de salida, así que **suponemos que cada socio se queda `minutos
 
 En el inicio del panel: cobrado en el mes (y contra el anterior), socios activos y altas, entradas de hoy y de la semana, y dos gráficos: **entradas por día** (últimas 2 semanas) y **promedio por hora** (últimas 4 semanas). Las agrupaciones se hacen en SQL con la zona horaria de Argentina; si no, alguien que entra a las 22 h contaría para el día siguiente. Los gráficos son HTML y CSS, sin librería: para una sola serie alcanza. Cada barra muestra su valor al pasar el mouse, y hay una tabla oculta para lectores de pantalla.
 
+## Etapa 3: rutinas y clases
+
+### Rutinas y plantillas
+
+- El profe (y el dueño) arma **plantillas** en _Rutinas_ y desde la ficha del socio le **asigna** una, o le arma una desde cero. El socio la ve en la pestaña _Rutinas_ del celular.
+- **Asignar crea una copia.** Una plantilla es una `Rutina` con `socioId` en `null`; al asignarla se copia para ese socio. Así el profe puede ajustar la de Juan sin tocar la de todos, y cambiar la plantilla no pisa las rutinas que ya se dieron.
+- **Los días y ejercicios se guardan como `jsonb`** (`dias`), no en tablas aparte. Una rutina siempre se lee y se guarda entera, y nunca se busca "todos los socios que hacen sentadilla", así que tres tablas con sus joins no aportan nada. A cambio, Postgres no valida la forma del JSON: lo valida Zod al guardar **y** al leer (`esquemaDias.parse`).
+
+### Clases con cupo
+
+- El dueño carga el **cronograma semanal** (ej. Funcional lunes 19:00, cupo 12). La agenda muestra las clases de los **próximos 7 días** que todavía no empezaron; personal y profes ven quiénes están anotados.
+- El socio **se anota y se da de baja** desde el celular. Las inscripciones son por fecha (`@@unique([claseId, fecha, socioId])`): anotarse al Funcional de este lunes no te anota a todos los lunes.
+- **El cupo no se puede pasar ni con dos personas tocando a la vez.** Contar los anotados y después insertar tiene una carrera: los dos ven 11/12 y entran los dos. Por eso la inscripción corre en una transacción que primero bloquea la fila de la clase (`SELECT … FOR UPDATE`): la segunda espera a que la primera termine y ya ve 12/12.
+- Con la **cuota vencida no se puede anotar** (a diferencia del ingreso, acá no hay nadie en la puerta para decidir). Bajarse solo se puede antes de que empiece la clase.
+
 ## Web
 
 La app web está en `apps/web`. Pantallas:
@@ -337,7 +352,7 @@ El seed acepta `SEED_CONTRASENA_STAFF` y `SEED_CONTRASENA_SOCIO`, para que la de
 
 ## Usuarios de prueba
 
-Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo.
+Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo. También trae un cronograma de clases (Funcional, Spinning y Yoga) con algunos anotados y dos plantillas de rutina.
 
 **Personal** — contraseña de todos: `Gimnasio123`. El personal entra por <http://localhost:5173/g/power-gym> (o `/g/titan-fitness`); el súper-admin por <http://localhost:5173/admin/ingresar>.
 
@@ -352,15 +367,15 @@ Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo.
 
 **Socios de Power Gym** (cada uno es un caso de prueba):
 
-| Socio          | DNI        | Situación                                                                                                 |
-| -------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
-| Juan Pérez     | `30111222` | Al día. **Cuenta activada:** contraseña `Socio1234` (entra por <http://localhost:5173/g/power-gym/socio>) |
-| María Gómez    | `32444555` | Al día con plan trimestral                                                                                |
-| Sofía Martínez | `41222333` | Al día con descuento de estudiante (10%)                                                                  |
-| Valentina Díaz | `39123456` | Ya pagó el mes que viene                                                                                  |
-| Carlos López   | `28999000` | Debe el mes actual (pendiente o vencido según el día)                                                     |
-| Diego Ruiz     | `35666777` | Debe dos meses y tiene un pago anulado                                                                    |
-| Ana Torres     | `44888999` | Recién anotada, nunca pagó                                                                                |
+| Socio          | DNI        | Situación                                                                                                                          |
+| -------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Juan Pérez     | `30111222` | Al día, con una rutina asignada. **Cuenta activada:** contraseña `Socio1234` (entra por <http://localhost:5173/g/power-gym/socio>) |
+| María Gómez    | `32444555` | Al día con plan trimestral                                                                                                         |
+| Sofía Martínez | `41222333` | Al día con descuento de estudiante (10%)                                                                                           |
+| Valentina Díaz | `39123456` | Ya pagó el mes que viene                                                                                                           |
+| Carlos López   | `28999000` | Debe el mes actual (pendiente o vencido según el día)                                                                              |
+| Diego Ruiz     | `35666777` | Debe dos meses y tiene un pago anulado                                                                                             |
+| Ana Torres     | `44888999` | Recién anotada, nunca pagó                                                                                                         |
 
 El seed también carga **entradas de ejemplo** de las últimas 4 semanas, para que el tablero y la ocupación tengan datos.
 
