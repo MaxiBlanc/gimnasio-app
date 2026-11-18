@@ -26,6 +26,9 @@ const esquemaEntorno = z.object({
   SMTP_USUARIO: z.string().optional(),
   SMTP_CONTRASENA: z.string().optional(),
   DIAS_VALIDEZ_ACTIVACION: z.coerce.number().int().positive().default(7),
+
+  // Secreto que Vercel manda al llamar al cron (mails automáticos). Sin él, el cron no corre.
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

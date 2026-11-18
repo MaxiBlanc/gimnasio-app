@@ -15,6 +15,7 @@ import { rutasMiGimnasio } from './modulos/mi-gimnasio/miGimnasio.rutas';
 import { rutasPublicas } from './modulos/publico/publico.rutas';
 import { rutasIngresos, rutasOcupacion } from './modulos/ingresos/ingresos.rutas';
 import { rutasMiCuenta } from './modulos/mi-cuenta/miCuenta.rutas';
+import { rutasCron } from './modulos/avisos/avisos.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -47,6 +48,7 @@ export function crearApp() {
   app.use('/api/ingresos', rutasIngresos);
   app.use('/api/ocupacion', rutasOcupacion);
   app.use('/api/mi-cuenta', rutasMiCuenta);
+  app.use('/api/cron', rutasCron);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

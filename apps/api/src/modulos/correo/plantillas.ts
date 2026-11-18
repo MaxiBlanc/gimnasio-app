@@ -64,3 +64,62 @@ export function correoActivacion(datos: {
       `El enlace vence en ${diasValidez} días.`,
   };
 }
+
+/** Botón grande con los colores del gimnasio (lo usan varios mails). */
+function boton(gimnasio: DatosGimnasioCorreo, enlace: string, texto: string): string {
+  return `<p style="text-align:center;margin:32px 0">
+         <a href="${enlace}" style="background:${gimnasio.colorPrimario};color:${gimnasio.colorSecundario};padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold">${texto}</a>
+       </p>`;
+}
+
+interface DatosAvisoCuota {
+  para: string;
+  nombreSocio: string;
+  gimnasio: DatosGimnasioCorreo;
+  /** Mes de la cuota, ya escrito para leer: "diciembre de 2026". */
+  mes: string;
+  /** Link a "mi cuenta" del socio. */
+  enlace: string;
+}
+
+/** Aviso automático: faltan pocos días para fin de mes y no pagó el que viene. */
+export function correoCuotaPorVencer(datos: DatosAvisoCuota): Correo {
+  const { gimnasio, mes, enlace } = datos;
+  const nombre = escaparHtml(datos.nombreSocio);
+  return {
+    para: datos.para,
+    asunto: `Tu cuota de ${mes} está por vencer`,
+    html: maquetar(
+      gimnasio,
+      `<p>¡Hola, ${nombre}!</p>
+       <p>Te recordamos que se acerca la cuota de <strong>${escaparHtml(mes)}</strong> en ${escaparHtml(gimnasio.nombre)}. Podés pagarla en recepción.</p>
+       ${boton(gimnasio, enlace, 'Ver mi cuota')}
+       <p style="font-size:13px;color:#71717a">Si ya la pagaste, ignorá este mail.</p>`,
+    ),
+    texto:
+      `¡Hola, ${datos.nombreSocio}!\n\n` +
+      `Te recordamos que se acerca la cuota de ${mes} en ${gimnasio.nombre}. ` +
+      `Podés pagarla en recepción.\n\nVer mi cuota: ${enlace}`,
+  };
+}
+
+/** Aviso automático: pasó el día de cierre y la cuota del mes sigue sin pagar. */
+export function correoCuotaVencida(datos: DatosAvisoCuota): Correo {
+  const { gimnasio, mes, enlace } = datos;
+  const nombre = escaparHtml(datos.nombreSocio);
+  return {
+    para: datos.para,
+    asunto: `Tu cuota de ${mes} está vencida`,
+    html: maquetar(
+      gimnasio,
+      `<p>¡Hola, ${nombre}!</p>
+       <p>La cuota de <strong>${escaparHtml(mes)}</strong> en ${escaparHtml(gimnasio.nombre)} figura como <strong>vencida</strong>. Acercate a recepción para ponerte al día.</p>
+       ${boton(gimnasio, enlace, 'Ver mi cuota')}
+       <p style="font-size:13px;color:#71717a">Si ya la pagaste, ignorá este mail.</p>`,
+    ),
+    texto:
+      `¡Hola, ${datos.nombreSocio}!\n\n` +
+      `La cuota de ${mes} en ${gimnasio.nombre} figura como vencida. ` +
+      `Acercate a recepción para ponerte al día.\n\nVer mi cuota: ${enlace}`,
+  };
+}

@@ -78,6 +78,9 @@ writeFileSync(
         // …y cualquier otra ruta (/panel/socios, /g/power-gym…) es la web: React Router decide.
         { src: '/(.*)', dest: '/index.html' },
       ],
+      // Cron de Vercel (el plan gratis permite uno por día): mails de cuota por vencer o
+      // vencida. 12:00 UTC = 9:00 en Argentina. Vercel le agrega el header con CRON_SECRET.
+      crons: [{ path: '/api/cron/avisos', schedule: '0 12 * * *' }],
     },
     null,
     2,

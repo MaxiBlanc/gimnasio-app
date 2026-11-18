@@ -79,7 +79,7 @@ function aSocio(
  * Usa las mismas reglas que calcularEstadoCuota (vía limitesDeHoy), y un test verifica
  * que ambas coincidan socio por socio.
  */
-function filtroEstado(estado: EstadoCuota | undefined, { hoy, config }: ContextoCuotas) {
+export function filtroEstado(estado: EstadoCuota | undefined, { hoy, config }: ContextoCuotas) {
   if (!estado) return {};
   const { finMesActual, enPeriodoDeAviso, pasoElCierre } = limitesDeHoy(hoy, config);
 

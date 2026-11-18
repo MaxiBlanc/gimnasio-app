@@ -10,4 +10,5 @@ export const ENTORNO_TESTS = {
   // Los tests nunca mandan mails: los guardan en `bandejaDePrueba` para inspeccionarlos.
   CORREO_MODO: 'memoria',
   ORIGEN_WEB: 'http://web.test',
+  CRON_SECRET: 'secreto-del-cron-para-tests',
 } as const;
