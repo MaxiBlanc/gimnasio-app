@@ -11,6 +11,7 @@ import bcrypt from 'bcryptjs';
 import { normalizarTexto } from '@gimnasio/compartido';
 import { prisma } from '../src/db';
 import { FormaPago, Rol, TipoDescuento } from '../src/generated/prisma/enums';
+import { proximasClases } from '../src/dominio/agenda';
 import { hoyEnArgentina, mesDeFecha, periodoDePago, sumarMeses } from '../src/dominio/periodos';
 import { textoBusquedaSocio } from '../src/modulos/socios/socios.servicio';
 
@@ -20,6 +21,9 @@ const CONTRASENA_STAFF = process.env['SEED_CONTRASENA_STAFF'] ?? 'Gimnasio123';
 const CONTRASENA_SOCIO = process.env['SEED_CONTRASENA_SOCIO'] ?? 'Socio1234';
 
 async function limpiarBase() {
+  await prisma.inscripcion.deleteMany();
+  await prisma.clase.deleteMany();
+  await prisma.rutina.deleteMany();
   // Orden inverso a las dependencias: primero lo que apunta a otras tablas.
   await prisma.avisoEnviado.deleteMany();
   await prisma.ingreso.deleteMany();
@@ -68,6 +72,109 @@ async function cargarIngresos(gimnasioId: string, socios: string[]) {
     datos.push({ gimnasioId, socioId, creadoEn: new Date(ahora - (10 + i * 15) * 60 * 1000) });
   }
   await prisma.ingreso.createMany({ data: datos });
+}
+
+/** Cronograma semanal, dos plantillas de rutina y algunos anotados en la agenda. */
+async function cargarClasesYRutinas(gimnasioId: string, profeId: string, socios: string[]) {
+  const cronograma = [
+    { nombre: 'Funcional', dias: [1, 3, 5], hora: '19:00', cupo: 12 },
+    { nombre: 'Spinning', dias: [2, 4], hora: '08:00', cupo: 10 },
+    { nombre: 'Yoga', dias: [6], hora: '10:30', cupo: 15 },
+  ];
+  const clases = [];
+  for (const item of cronograma) {
+    for (const diaSemana of item.dias) {
+      clases.push(
+        await prisma.clase.create({
+          data: {
+            gimnasioId,
+            nombre: item.nombre,
+            profesorId: profeId,
+            diaSemana,
+            horaInicio: item.hora,
+            duracionMinutos: 60,
+            cupo: item.cupo,
+          },
+        }),
+      );
+    }
+  }
+
+  // Anotados en las próximas clases (cantidades fijas para que la demo sea igual siempre).
+  const proximas = proximasClases(clases, new Date());
+  for (const [i, { clase, fecha }] of proximas.entries()) {
+    const cantidad = Math.min(clase.cupo, [3, 7, clase.cupo, 5][i % 4] ?? 0, socios.length);
+    await prisma.inscripcion.createMany({
+      data: socios.slice(0, cantidad).map((socioId) => ({
+        gimnasioId,
+        claseId: clase.id,
+        socioId,
+        fecha: new Date(`${fecha}T00:00:00Z`),
+      })),
+    });
+  }
+
+  const ejercicio = (nombre: string, series: number, repeticiones: string) => ({
+    nombre,
+    series,
+    repeticiones,
+    descanso: '90 s',
+    notas: '',
+  });
+  await prisma.rutina.createMany({
+    data: [
+      {
+        gimnasioId,
+        creadaPorId: profeId,
+        nombre: 'Principiante full body',
+        descripcion: 'Tres veces por semana, con un día de descanso entre medio.',
+        dias: [
+          {
+            nombre: 'Día A',
+            ejercicios: [
+              ejercicio('Sentadilla goblet', 3, '12'),
+              ejercicio('Press de pecho con mancuernas', 3, '10'),
+              ejercicio('Remo con mancuerna', 3, '10 por lado'),
+              ejercicio('Plancha', 3, '30 s'),
+            ],
+          },
+          {
+            nombre: 'Día B',
+            ejercicios: [
+              ejercicio('Peso muerto rumano', 3, '10'),
+              ejercicio('Press militar', 3, '10'),
+              ejercicio('Jalón al pecho', 3, '12'),
+              ejercicio('Estocadas', 3, '10 por pierna'),
+            ],
+          },
+        ],
+      },
+      {
+        gimnasioId,
+        creadaPorId: profeId,
+        nombre: 'Hipertrofia torso / piernas',
+        descripcion: 'Cuatro días: torso, piernas, torso, piernas.',
+        dias: [
+          {
+            nombre: 'Torso',
+            ejercicios: [
+              ejercicio('Press banca', 4, '8-10'),
+              ejercicio('Remo con barra', 4, '8-10'),
+              ejercicio('Vuelos laterales', 3, '15'),
+            ],
+          },
+          {
+            nombre: 'Piernas',
+            ejercicios: [
+              ejercicio('Sentadilla', 4, '8'),
+              ejercicio('Prensa', 3, '12'),
+              ejercicio('Curl femoral', 3, '12'),
+            ],
+          },
+        ],
+      },
+    ],
+  });
 }
 
 async function main() {
@@ -268,6 +375,10 @@ async function main() {
   }
 
   await cargarIngresos(power.id, sociosPower);
+  const profe = await prisma.usuario.findFirstOrThrow({
+    where: { gimnasioId: power.id, rol: Rol.PROFESOR },
+  });
+  await cargarClasesYRutinas(power.id, profe.id, sociosPower);
 
   // ── Segundo gimnasio: sirve para comprobar que nadie ve datos de otro gimnasio ──
   const titan = await prisma.gimnasio.create({
@@ -307,6 +418,8 @@ async function main() {
     usuarios: await prisma.usuario.count(),
     socios: await prisma.socio.count(),
     pagos: await prisma.pago.count(),
+    clases: await prisma.clase.count(),
+    inscripciones: await prisma.inscripcion.count(),
   };
   console.log('🌱 Seed listo:', totales);
 }

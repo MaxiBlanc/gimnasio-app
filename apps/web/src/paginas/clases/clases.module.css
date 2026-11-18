@@ -1,0 +1,105 @@
+.dia {
+  display: grid;
+  gap: 0.5rem;
+}
+.dia + .dia {
+  margin-top: 0.75rem;
+}
+
+.tituloDia {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.clase {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+.clase + .clase {
+  border-top: 1px solid var(--linea);
+}
+
+.hora {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.detalle {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+}
+
+.anotados {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+.anotados summary {
+  cursor: pointer;
+  color: var(--tinta-suave);
+}
+.anotados ol {
+  margin: 0.35rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.lugares {
+  display: grid;
+  justify-items: end;
+  gap: 0.2rem;
+  min-width: 4.5rem;
+  font-weight: 700;
+}
+
+.barra {
+  width: 4.5rem;
+  height: 0.35rem;
+  overflow: hidden;
+  background: var(--superficie-2);
+  border-radius: 999px;
+}
+.barra > span {
+  display: block;
+  height: 100%;
+  background: var(--tinta-suave);
+  border-radius: inherit;
+}
+.lugares[data-llena='true'] .barra > span {
+  background: var(--vencido);
+}
+.lugares[data-llena='true'] .meta {
+  color: var(--vencido);
+  font-weight: 700;
+}
+
+/* ── Botón de anotarse (vista del socio) ── */
+.accion {
+  grid-column: 2 / -1;
+  justify-self: start;
+}
+.anotado {
+  color: var(--al-dia);
+  font-weight: 700;
+  font-size: 0.85rem;
+}

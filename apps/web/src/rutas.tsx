@@ -30,6 +30,7 @@ import { SociosLista } from './paginas/socios/SociosLista';
 import { MiCuenta } from './paginas/socio/MiCuenta';
 import { EditarRutina } from './paginas/rutinas/EditarRutina';
 import { Plantillas } from './paginas/rutinas/Plantillas';
+import { Clases } from './paginas/clases/Clases';
 import { TabletIngreso } from './paginas/ingreso/TabletIngreso';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
@@ -167,6 +168,14 @@ export const enrutador = createBrowserRouter([
               ),
             }),
           ),
+          {
+            path: 'clases',
+            element: (
+              <SoloRoles roles={['DUENO', 'RECEPCION', 'PROFESOR']}>
+                <Clases />
+              </SoloRoles>
+            ),
+          },
           {
             path: 'planes',
             element: (
