@@ -304,7 +304,8 @@ Demo online: https://gimnasio-app-flax.vercel.app
 - **Lo armamos nosotros** con `scripts/construir-vercel.mjs` (Build Output API de Vercel): Vite compila la web y **esbuild empaqueta la API en un solo archivo** (incluye el paquete compartido y el cliente de Prisma). Así evitamos que la detección automática de Vercel se confunda con el monorepo.
 - **Base de datos:** Neon (Postgres serverless), creada desde la pestaña Storage del proyecto. Vercel inyecta `DATABASE_URL` sola.
 - **Variables en Vercel (Production):** `DATABASE_URL`, `JWT_SECRETO`, `NODE_ENV=production`, `ORIGEN_WEB` (la URL pública, para los links de activación) y `CRON_SECRET` (para los mails automáticos).
-- **Correo:** todavía sin proveedor en producción; la app avisa que el mail no se pudo enviar.
+- **Correo:** Gmail por SMTP (gratis, hasta ~500 mails por día) con una cuenta creada solo para la app y una **contraseña de aplicación** de Google. Variables: `SMTP_HOST=smtp.gmail.com`, `SMTP_PUERTO=465`, `SMTP_USUARIO`, `SMTP_CONTRASENA` y `CORREO_REMITENTE`. El código no cambia: es el mismo SMTP que Mailpit en desarrollo.
+- **Socios de demo en producción:** tienen mails `gimnasioapp.avisos+nombre@gmail.com`. Gmail ignora lo que va después del `+`, así que los avisos de prueba llegan a la casilla de la app y nunca a terceros.
 
 Para deployar una versión nueva (necesita `npx vercel login` una vez):
 
