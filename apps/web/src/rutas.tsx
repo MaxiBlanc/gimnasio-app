@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { Building2, House, Settings, Tags, Users } from 'lucide-react';
-import type { Rol, UsuarioSesion } from '@gimnasio/compartido';
+import type { RolSesion, UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
 import { InicioAdmin } from './paginas/InicioAdmin';
@@ -21,7 +21,7 @@ import { SociosLista } from './paginas/socios/SociosLista';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
 
-const ROLES_STAFF: Rol[] = ['DUENO', 'RECEPCION', 'PROFESOR', 'KIOSCO'];
+const ROLES_STAFF: RolSesion[] = ['DUENO', 'RECEPCION', 'PROFESOR', 'KIOSCO'];
 
 const MENU_STAFF: ItemMenu[] = [
   { ruta: '/panel', etiqueta: 'Inicio', Icono: House, roles: ROLES_STAFF, exacto: true },
@@ -45,7 +45,7 @@ const MENU_ADMIN: ItemMenu[] = [
  * que rechaza cualquier pedido sin permiso aunque alguien saltee esta pantalla.
  */
 interface PropsConSesion {
-  roles: Rol[];
+  roles: RolSesion[];
   children: (usuario: UsuarioSesion) => ReactNode;
 }
 
@@ -66,7 +66,7 @@ function ConSesion({ roles, children }: PropsConSesion) {
 }
 
 /** Dentro del panel: una pantalla solo para algunos roles (el resto vuelve al inicio). */
-function SoloRoles({ roles, children }: { roles: Rol[]; children: ReactNode }) {
+function SoloRoles({ roles, children }: { roles: RolSesion[]; children: ReactNode }) {
   const { usuario } = useSesion();
   if (!usuario || !roles.includes(usuario.rol)) return <Navigate to="/panel" replace />;
   return children;

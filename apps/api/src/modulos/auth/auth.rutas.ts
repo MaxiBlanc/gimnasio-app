@@ -1,10 +1,16 @@
 import { Router, type CookieOptions, type Response } from 'express';
-import { esquemaLoginAdmin, esquemaLoginStaff, type RespuestaSesion } from '@gimnasio/compartido';
+import {
+  esquemaLoginAdmin,
+  esquemaLoginSocio,
+  esquemaLoginStaff,
+  type RespuestaSesion,
+} from '@gimnasio/compartido';
 import { entorno } from '../../config/entorno';
 import { autenticar, obtenerAuth } from '../../middlewares/autenticar';
 import {
   cerrarSesion,
   iniciarSesionAdmin,
+  iniciarSesionSocio,
   iniciarSesionStaff,
   obtenerUsuarioSesion,
   refrescarSesion,
@@ -46,6 +52,11 @@ rutasAuth.post('/login', async (req, res) => {
   responderSesion(res, await iniciarSesionStaff(datos));
 });
 
+rutasAuth.post('/socio/login', async (req, res) => {
+  const datos = esquemaLoginSocio.parse(req.body);
+  responderSesion(res, await iniciarSesionSocio(datos));
+});
+
 rutasAuth.post('/admin/login', async (req, res) => {
   const datos = esquemaLoginAdmin.parse(req.body);
   responderSesion(res, await iniciarSesionAdmin(datos));
@@ -69,5 +80,5 @@ rutasAuth.post('/salir', async (req, res) => {
 });
 
 rutasAuth.get('/yo', autenticar, async (req, res) => {
-  res.json(await obtenerUsuarioSesion(obtenerAuth(req).usuarioId));
+  res.json(await obtenerUsuarioSesion(obtenerAuth(req)));
 });

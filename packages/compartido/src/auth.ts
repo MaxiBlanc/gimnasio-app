@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { Rol } from './roles';
+import type { RolSesion } from './roles';
+import { esquemaDni } from './socios';
 
 /**
  * Esquemas de validación del login. Los usa la API para validar lo que llega,
@@ -24,6 +25,14 @@ export type DatosLoginStaff = z.infer<typeof esquemaLoginStaff>;
 export const esquemaLoginAdmin = z.object({ email, contrasena });
 export type DatosLoginAdmin = z.infer<typeof esquemaLoginAdmin>;
 
+/** Login del socio: con su DNI (no con el email) y la contraseña que eligió al activar la cuenta. */
+export const esquemaLoginSocio = z.object({
+  gimnasio: z.string().min(1, 'Falta el gimnasio'),
+  dni: esquemaDni,
+  contrasena,
+});
+export type DatosLoginSocio = z.infer<typeof esquemaLoginSocio>;
+
 /** Datos del gimnasio que la web necesita para mostrarse con su marca. */
 export interface GimnasioSesion {
   id: string;
@@ -39,7 +48,7 @@ export interface UsuarioSesion {
   id: string;
   nombre: string;
   email: string;
-  rol: Rol;
+  rol: RolSesion; // 'SOCIO' si es un socio
   gimnasio: GimnasioSesion | null; // null solo para el súper-admin
 }
 

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import type {
   DatosLoginAdmin,
+  DatosLoginSocio,
   DatosLoginStaff,
   GimnasioSesion,
   UsuarioSesion,
@@ -10,6 +11,7 @@ import { ErrorApp } from '../../errores';
 import type { Prisma } from '../../generated/prisma/client';
 import { Rol } from '../../generated/prisma/enums';
 import {
+  type DatosAuth,
   firmarTokenAcceso,
   generarTokenAleatorio,
   hashearToken,
@@ -60,18 +62,48 @@ const seleccionUsuario = {
 /** Tipo del resultado de una consulta con esa selección (Prisma lo calcula por nosotros). */
 type UsuarioConGimnasio = Prisma.UsuarioGetPayload<{ select: typeof seleccionUsuario }>;
 
+/** Lo mismo para un socio: también trae su gimnasio, para mostrar la marca. */
+const seleccionSocio = {
+  id: true,
+  nombre: true,
+  apellido: true,
+  email: true,
+  activo: true,
+  hashContrasena: true,
+  gimnasio: seleccionUsuario.gimnasio,
+} satisfies Prisma.SocioSelect;
+
+type SocioConGimnasio = Prisma.SocioGetPayload<{ select: typeof seleccionSocio }>;
+
 /** Un usuario puede operar si está activo y su gimnasio (si tiene) también. */
 function puedeOperar(usuario: UsuarioConGimnasio): boolean {
   return usuario.activo && (usuario.gimnasio === null || usuario.gimnasio.activo);
 }
 
+/** Un socio puede entrar si sigue activo, su gimnasio también y ya activó su cuenta. */
+function socioPuedeOperar(socio: SocioConGimnasio): boolean {
+  return socio.activo && socio.gimnasio.activo && socio.hashContrasena !== null;
+}
+
+/** Datos del gimnasio para el cliente (sin el flag interno `activo`). */
+function datosGimnasio({ activo: _activo, ...gimnasio }: SocioConGimnasio['gimnasio']) {
+  return gimnasio;
+}
+
+/** El socio se muestra con la misma forma que un usuario, con rol 'SOCIO'. */
+function socioASesion(socio: SocioConGimnasio): UsuarioSesion {
+  return {
+    id: socio.id,
+    nombre: `${socio.nombre} ${socio.apellido}`,
+    email: socio.email,
+    rol: 'SOCIO',
+    gimnasio: datosGimnasio(socio.gimnasio),
+  };
+}
+
 /** Convierte el registro de la base en lo que ve el cliente (sin hash ni flags internos). */
 function aUsuarioSesion(usuario: UsuarioConGimnasio): UsuarioSesion {
-  let gimnasio: GimnasioSesion | null = null;
-  if (usuario.gimnasio) {
-    const { activo: _activo, ...datosGimnasio } = usuario.gimnasio;
-    gimnasio = datosGimnasio;
-  }
+  const gimnasio: GimnasioSesion | null = usuario.gimnasio ? datosGimnasio(usuario.gimnasio) : null;
   return {
     id: usuario.id,
     nombre: usuario.nombre,
@@ -81,19 +113,30 @@ function aUsuarioSesion(usuario: UsuarioConGimnasio): UsuarioSesion {
   };
 }
 
-async function verificarContrasena(usuario: UsuarioConGimnasio | null, contrasena: string) {
-  const coincide = await bcrypt.compare(contrasena, usuario?.hashContrasena ?? HASH_FALSO);
+/**
+ * Sirve para usuarios y socios (genérico `T`): cualquier cosa con un hash de contraseña.
+ * Un socio que todavía no activó su cuenta no tiene hash: se compara contra el falso y falla.
+ */
+async function verificarContrasena<T extends { hashContrasena: string | null }>(
+  cuenta: T | null,
+  contrasena: string,
+  puedeEntrar: (cuenta: T) => boolean,
+): Promise<T> {
+  const coincide = await bcrypt.compare(contrasena, cuenta?.hashContrasena ?? HASH_FALSO);
   // Mismo error si no existe, si la contraseña está mal o si está inactivo:
   // no le damos pistas a quien intenta adivinar.
-  if (!usuario || !coincide || !puedeOperar(usuario)) throw credencialesInvalidas();
-  return usuario;
+  if (!cuenta || !coincide || !puedeEntrar(cuenta)) throw credencialesInvalidas();
+  return cuenta;
 }
 
-async function crearSesion(usuario: UsuarioConGimnasio): Promise<SesionIniciada> {
+async function crearSesion(usuario: UsuarioSesion): Promise<SesionIniciada> {
   const tokenRefresco = generarTokenAleatorio();
+  const esSocio = usuario.rol === 'SOCIO';
   await prisma.sesion.create({
     data: {
-      usuarioId: usuario.id,
+      // La tabla de sesiones guarda a quién pertenece: un usuario O un socio.
+      usuarioId: esSocio ? null : usuario.id,
+      socioId: esSocio ? usuario.id : null,
       hashToken: hashearToken(tokenRefresco),
       expiraEn: vencimientoTokenRefresco(),
     },
@@ -105,7 +148,7 @@ async function crearSesion(usuario: UsuarioConGimnasio): Promise<SesionIniciada>
       gimnasioId: usuario.gimnasio?.id ?? null,
     }),
     tokenRefresco,
-    usuario: aUsuarioSesion(usuario),
+    usuario,
   };
 }
 
@@ -117,7 +160,20 @@ export async function iniciarSesionStaff(datos: DatosLoginStaff): Promise<Sesion
     where: { email: datos.email, gimnasio: { slug: datos.gimnasio }, rol: { not: Rol.SUPERADMIN } },
     select: seleccionUsuario,
   });
-  return crearSesion(await verificarContrasena(usuario, datos.contrasena));
+  return crearSesion(
+    aUsuarioSesion(await verificarContrasena(usuario, datos.contrasena, puedeOperar)),
+  );
+}
+
+/** Login del socio: DNI + contraseña, dentro del gimnasio indicado. */
+export async function iniciarSesionSocio(datos: DatosLoginSocio): Promise<SesionIniciada> {
+  const socio = await prisma.socio.findFirst({
+    where: { dni: datos.dni, gimnasio: { slug: datos.gimnasio } },
+    select: seleccionSocio,
+  });
+  return crearSesion(
+    socioASesion(await verificarContrasena(socio, datos.contrasena, socioPuedeOperar)),
+  );
 }
 
 export async function iniciarSesionAdmin(datos: DatosLoginAdmin): Promise<SesionIniciada> {
@@ -125,7 +181,9 @@ export async function iniciarSesionAdmin(datos: DatosLoginAdmin): Promise<Sesion
     where: { email: datos.email, rol: Rol.SUPERADMIN },
     select: seleccionUsuario,
   });
-  return crearSesion(await verificarContrasena(usuario, datos.contrasena));
+  return crearSesion(
+    aUsuarioSesion(await verificarContrasena(usuario, datos.contrasena, puedeOperar)),
+  );
 }
 
 /**
@@ -137,12 +195,21 @@ export async function refrescarSesion(tokenRefresco: string | undefined): Promis
 
   const sesion = await prisma.sesion.findUnique({
     where: { hashToken: hashearToken(tokenRefresco) },
-    select: { id: true, expiraEn: true, revocadaEn: true, usuario: { select: seleccionUsuario } },
+    select: {
+      id: true,
+      expiraEn: true,
+      revocadaEn: true,
+      usuario: { select: seleccionUsuario },
+      socio: { select: seleccionSocio },
+    },
   });
-  if (!sesion || sesion.revocadaEn || sesion.expiraEn <= new Date() || !sesion.usuario) {
-    throw sesionInvalida();
-  }
-  if (!puedeOperar(sesion.usuario)) throw sesionInvalida();
+  if (!sesion || sesion.revocadaEn || sesion.expiraEn <= new Date()) throw sesionInvalida();
+
+  // De quién es la sesión (usuario o socio), y si todavía puede entrar.
+  let usuario: UsuarioSesion | null = null;
+  if (sesion.usuario && puedeOperar(sesion.usuario)) usuario = aUsuarioSesion(sesion.usuario);
+  if (sesion.socio && socioPuedeOperar(sesion.socio)) usuario = socioASesion(sesion.socio);
+  if (!usuario) throw sesionInvalida();
 
   // updateMany con la condición "todavía no revocada": si llegan dos pedidos al mismo tiempo
   // con el mismo token, solo uno logra revocarlo (count = 1); el otro falla.
@@ -152,7 +219,7 @@ export async function refrescarSesion(tokenRefresco: string | undefined): Promis
   });
   if (count !== 1) throw sesionInvalida();
 
-  return crearSesion(sesion.usuario);
+  return crearSesion(usuario);
 }
 
 /** Cerrar sesión: revoca el token de refresco. Si no hay token o ya no existe, no hace nada. */
@@ -164,8 +231,16 @@ export async function cerrarSesion(tokenRefresco: string | undefined): Promise<v
   });
 }
 
-/** Datos actualizados del usuario logueado. */
-export async function obtenerUsuarioSesion(usuarioId: string): Promise<UsuarioSesion> {
+/** Datos actualizados de quien está logueado (usuario del panel o socio). */
+export async function obtenerUsuarioSesion({ usuarioId, rol }: DatosAuth): Promise<UsuarioSesion> {
+  if (rol === 'SOCIO') {
+    const socio = await prisma.socio.findUnique({
+      where: { id: usuarioId },
+      select: seleccionSocio,
+    });
+    if (!socio || !socioPuedeOperar(socio)) throw sesionInvalida();
+    return socioASesion(socio);
+  }
   const usuario = await prisma.usuario.findUnique({
     where: { id: usuarioId },
     select: seleccionUsuario,

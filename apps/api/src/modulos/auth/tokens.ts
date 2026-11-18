@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { ROLES } from '@gimnasio/compartido';
+import { ROLES_SESION, type RolSesion } from '@gimnasio/compartido';
 import { entorno } from '../../config/entorno';
 
 /**
@@ -21,14 +21,15 @@ import { entorno } from '../../config/entorno';
 
 /** Lo que guardamos dentro del JWT. Es legible por cualquiera: nunca pongas datos sensibles. */
 const esquemaContenidoJwt = z.object({
-  sub: z.uuid(), // "subject": el id del usuario (nombre estándar de JWT)
-  rol: z.enum(ROLES),
+  sub: z.uuid(), // "subject": el id del usuario o del socio (nombre estándar de JWT)
+  rol: z.enum(ROLES_SESION),
   gimnasioId: z.uuid().nullable(),
 });
 
 export type DatosAuth = {
+  /** Id del usuario del panel, o del socio si `rol` es 'SOCIO'. */
   usuarioId: string;
-  rol: (typeof ROLES)[number];
+  rol: RolSesion;
   gimnasioId: string | null;
 };
 

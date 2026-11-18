@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { LogOut, Menu, X } from 'lucide-react';
-import { NOMBRES_ROL, type Rol, type UsuarioSesion } from '@gimnasio/compartido';
+import { NOMBRES_ROL, type RolSesion, type UsuarioSesion } from '@gimnasio/compartido';
 import { BotonTema } from '../componentes/BotonTema';
 import { useSesion } from '../sesion/sesion';
 import { aplicarMarca, MARCA_APP } from '../tema/marca';
@@ -12,7 +12,7 @@ export interface ItemMenu {
   etiqueta: string;
   Icono: ComponentType<{ size?: number; 'aria-hidden'?: boolean }>;
   /** Roles que ven este ítem. */
-  roles: Rol[];
+  roles: RolSesion[];
   /** true si solo se marca activo en la ruta exacta (para "Inicio"). */
   exacto?: boolean;
 }
