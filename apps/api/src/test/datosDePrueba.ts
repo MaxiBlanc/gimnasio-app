@@ -114,6 +114,7 @@ export async function crearSocioDePrueba(
         montoFinal: 20000,
         formaPago: 'EFECTIVO',
         registradoPorId,
+        creadoEn: new Date(), // con el reloj de JS (los tests pueden fijarlo), no el de la base
       },
     });
   }

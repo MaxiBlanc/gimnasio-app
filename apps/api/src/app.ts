@@ -16,6 +16,7 @@ import { rutasPublicas } from './modulos/publico/publico.rutas';
 import { rutasIngresos, rutasOcupacion } from './modulos/ingresos/ingresos.rutas';
 import { rutasMiCuenta } from './modulos/mi-cuenta/miCuenta.rutas';
 import { rutasCron } from './modulos/avisos/avisos.rutas';
+import { rutasTablero } from './modulos/tablero/tablero.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -49,6 +50,7 @@ export function crearApp() {
   app.use('/api/ocupacion', rutasOcupacion);
   app.use('/api/mi-cuenta', rutasMiCuenta);
   app.use('/api/cron', rutasCron);
+  app.use('/api/tablero', rutasTablero);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

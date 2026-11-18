@@ -47,3 +47,15 @@ export interface MiCuenta {
   /** Cuántas veces vino este mes. */
   ingresosDelMes: number;
 }
+
+/** Dashboard del dueño: cómo viene el gimnasio. */
+export interface Tablero {
+  cobrado: { mesActual: number; mesAnterior: number };
+  sociosActivos: number;
+  altasDelMes: number;
+  ingresos: { hoy: number; ultimos7Dias: number };
+  /** Entradas por día, de los últimos 14 días (incluye los días sin entradas, en 0). */
+  ingresosPorDia: { fecha: string; cantidad: number }[];
+  /** Promedio de entradas por hora del día en las últimas 4 semanas (de 0 a 23 h). */
+  ingresosPorHora: { hora: number; promedio: number }[];
+}
