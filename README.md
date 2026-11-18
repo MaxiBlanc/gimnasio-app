@@ -231,6 +231,36 @@ Siempre es el gimnasio **del token**: un dueño no puede tocar la configuración
 - **Solo el dueño anula** pagos, con un motivo. El pago anulado no se borra (queda quién, cuándo y por qué) y el mes queda libre para cargar el pago correcto.
 - La forma de pago (efectivo, transferencia, otro) es **solo informativa**: la app no procesa cobros.
 
+## Etapa 2: socios, ingreso, ocupación, mails y tablero
+
+### Cuenta del socio (celular)
+
+- El socio entra por `/g/<gimnasio>/socio` con **DNI y contraseña** (la que eligió con el link de activación). Ve su cuota con el color del estado, su plan, sus pagos, cuántas veces vino en el mes y la ocupación del gimnasio.
+- **Un solo sistema de sesión para todos:** el token de acceso del socio lleva `rol: 'SOCIO'` y la tabla `sesiones` guarda un `usuarioId` **o** un `socioId`. Refrescar, cerrar sesión y `/yo` funcionan igual.
+- **Las rutas del panel están cerradas para los socios sin hacer nada especial:** `permitirRoles()` solo acepta roles del personal, así que `'SOCIO'` nunca pasa. Las del socio usan `soloSocios`, y el id sale del token (cada socio ve solo **su** cuenta).
+
+### Tablet de ingreso
+
+- El usuario "Pantalla de ingreso" (rol `KIOSCO`) entra directo a `/ingreso`: teclado numérico grande (también anda con un teclado físico o un lector). Dueño y recepción la tienen en el menú, por si la tablet falla.
+- **Cuota vencida** (pasado el día de cierre, 10 por defecto): la pantalla avisa en rojo, pero **la entrada se registra igual** y queda marcada (`cuotaVencida`). Dejarlo pasar o no es decisión del gimnasio.
+- Si el mismo socio marca dos veces dentro del tiempo de permanencia, no se cuenta de nuevo.
+
+### Ocupación estimada
+
+No hay registro de salida, así que **suponemos que cada socio se queda `minutosPermanencia`** (90 por defecto, configurable). La ocupación son los socios distintos que entraron en esa ventana. Con la capacidad máxima cargada se muestra el nivel: tranqui (menos del 40 %), movido (menos del 75 %) o lleno. Se actualiza sola cada minuto.
+
+### Mails automáticos (Vercel Cron)
+
+- Un cron diario (`0 12 * * *`, 9:00 en Argentina; el plan gratis permite uno por día) llama a `GET /api/cron/avisos`.
+  - **Por vencer:** en los últimos días del mes, a quien pagó este mes pero no el siguiente.
+  - **Vencida:** pasado el día de cierre, a quien no pagó este mes.
+- La ruta solo responde con el header `Authorization: Bearer <CRON_SECRET>`, que Vercel agrega solo. Se compara en tiempo constante.
+- La tabla `avisos_enviados` (con `@@unique([socioId, tipo, mes])`) evita repetir un aviso. Si un mail falla, no se anota y se reintenta al día siguiente.
+
+### Tablero del dueño
+
+En el inicio del panel: cobrado en el mes (y contra el anterior), socios activos y altas, entradas de hoy y de la semana, y dos gráficos: **entradas por día** (últimas 2 semanas) y **promedio por hora** (últimas 4 semanas). Las agrupaciones se hacen en SQL con la zona horaria de Argentina; si no, alguien que entra a las 22 h contaría para el día siguiente. Los gráficos son HTML y CSS, sin librería: para una sola serie alcanza. Cada barra muestra su valor al pasar el mouse, y hay una tabla oculta para lectores de pantalla.
+
 ## Web
 
 La app web está en `apps/web`. Pantallas:
@@ -273,7 +303,7 @@ Demo online: https://gimnasio-app-flax.vercel.app
 - **Todo en un solo proyecto de Vercel:** la web se sirve como archivos estáticos y la API entera corre como **una función** en `/api/*`. Al estar en el mismo dominio, la cookie de refresco sigue siendo `sameSite: strict` y no hace falta CORS.
 - **Lo armamos nosotros** con `scripts/construir-vercel.mjs` (Build Output API de Vercel): Vite compila la web y **esbuild empaqueta la API en un solo archivo** (incluye el paquete compartido y el cliente de Prisma). Así evitamos que la detección automática de Vercel se confunda con el monorepo.
 - **Base de datos:** Neon (Postgres serverless), creada desde la pestaña Storage del proyecto. Vercel inyecta `DATABASE_URL` sola.
-- **Variables en Vercel (Production):** `DATABASE_URL`, `JWT_SECRETO`, `NODE_ENV=production`, `ORIGEN_WEB` (la URL pública, para los links de activación).
+- **Variables en Vercel (Production):** `DATABASE_URL`, `JWT_SECRETO`, `NODE_ENV=production`, `ORIGEN_WEB` (la URL pública, para los links de activación) y `CRON_SECRET` (para los mails automáticos).
 - **Correo:** todavía sin proveedor en producción; la app avisa que el mail no se pudo enviar.
 
 Para deployar una versión nueva (necesita `npx vercel login` una vez):
@@ -321,14 +351,16 @@ Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo.
 
 **Socios de Power Gym** (cada uno es un caso de prueba):
 
-| Socio          | DNI        | Situación                                             |
-| -------------- | ---------- | ----------------------------------------------------- |
-| Juan Pérez     | `30111222` | Al día. **Cuenta activada:** contraseña `Socio1234`   |
-| María Gómez    | `32444555` | Al día con plan trimestral                            |
-| Sofía Martínez | `41222333` | Al día con descuento de estudiante (10%)              |
-| Valentina Díaz | `39123456` | Ya pagó el mes que viene                              |
-| Carlos López   | `28999000` | Debe el mes actual (pendiente o vencido según el día) |
-| Diego Ruiz     | `35666777` | Debe dos meses y tiene un pago anulado                |
-| Ana Torres     | `44888999` | Recién anotada, nunca pagó                            |
+| Socio          | DNI        | Situación                                                                                                 |
+| -------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| Juan Pérez     | `30111222` | Al día. **Cuenta activada:** contraseña `Socio1234` (entra por <http://localhost:5173/g/power-gym/socio>) |
+| María Gómez    | `32444555` | Al día con plan trimestral                                                                                |
+| Sofía Martínez | `41222333` | Al día con descuento de estudiante (10%)                                                                  |
+| Valentina Díaz | `39123456` | Ya pagó el mes que viene                                                                                  |
+| Carlos López   | `28999000` | Debe el mes actual (pendiente o vencido según el día)                                                     |
+| Diego Ruiz     | `35666777` | Debe dos meses y tiene un pago anulado                                                                    |
+| Ana Torres     | `44888999` | Recién anotada, nunca pagó                                                                                |
+
+El seed también carga **entradas de ejemplo** de las últimas 4 semanas, para que el tablero y la ocupación tengan datos.
 
 Titan Fitness tiene un socio con el **mismo DNI** que Juan Pérez, para comprobar que el DNI es único por gimnasio y que los datos no se mezclan.
