@@ -17,6 +17,7 @@ import { rutasIngresos, rutasOcupacion } from './modulos/ingresos/ingresos.rutas
 import { rutasMiCuenta } from './modulos/mi-cuenta/miCuenta.rutas';
 import { rutasCron } from './modulos/avisos/avisos.rutas';
 import { rutasTablero } from './modulos/tablero/tablero.rutas';
+import { rutasRutinas, rutasRutinasDeSocio } from './modulos/rutinas/rutinas.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -42,6 +43,7 @@ export function crearApp() {
   app.use('/api/descuentos', rutasDescuentos);
   // Lo más específico primero: /api/socios/:id/pagos antes que /api/socios.
   app.use('/api/socios/:id/pagos', rutasPagosDeSocio);
+  app.use('/api/socios/:id/rutinas', rutasRutinasDeSocio);
   app.use('/api/socios', rutasSocios);
   app.use('/api/cuenta-socio', rutasCuentaSocio);
   app.use('/api/pagos', rutasPagos);
@@ -51,6 +53,7 @@ export function crearApp() {
   app.use('/api/mi-cuenta', rutasMiCuenta);
   app.use('/api/cron', rutasCron);
   app.use('/api/tablero', rutasTablero);
+  app.use('/api/rutinas', rutasRutinas);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

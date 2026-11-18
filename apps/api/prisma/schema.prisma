@@ -73,14 +73,17 @@ model Gimnasio {
   creadoEn             DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn        DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  usuarios    Usuario[]
-  socios      Socio[]
-  planes      Plan[]
-  descuentos  Descuento[]
-  pagos       Pago[]
-  tokensSocio TokenSocio[]
-  ingresos    Ingreso[]
-  avisos      AvisoEnviado[]
+  usuarios      Usuario[]
+  socios        Socio[]
+  planes        Plan[]
+  descuentos    Descuento[]
+  pagos         Pago[]
+  tokensSocio   TokenSocio[]
+  ingresos      Ingreso[]
+  avisos        AvisoEnviado[]
+  rutinas       Rutina[]
+  clases        Clase[]
+  inscripciones Inscripcion[]
 
   @@map("gimnasios")
 }
@@ -105,6 +108,8 @@ model Usuario {
   sesiones         Sesion[]
   pagosRegistrados Pago[]    @relation("PagoRegistradoPor")
   pagosAnulados    Pago[]    @relation("PagoAnuladoPor")
+  rutinasCreadas   Rutina[]
+  clasesDictadas   Clase[]
 
   // El mismo email puede existir en dos gimnasios distintos, pero no dos veces en el mismo.
   @@unique([gimnasioId, email])
@@ -194,16 +199,18 @@ model Socio {
   creadoEn           DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn      DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  gimnasio  Gimnasio       @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  gimnasio      Gimnasio       @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
   // Claves foráneas COMPUESTAS (id + gimnasio_id): la base de datos misma impide que un
   // socio tenga asignado un plan o un descuento de OTRO gimnasio, aunque el código tenga un bug.
-  plan      Plan           @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
-  descuento Descuento?     @relation(fields: [descuentoId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
-  pagos     Pago[]
-  sesiones  Sesion[]
-  tokens    TokenSocio[]
-  ingresos  Ingreso[]
-  avisos    AvisoEnviado[]
+  plan          Plan           @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  descuento     Descuento?     @relation(fields: [descuentoId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  pagos         Pago[]
+  sesiones      Sesion[]
+  tokens        TokenSocio[]
+  ingresos      Ingreso[]
+  avisos        AvisoEnviado[]
+  rutinas       Rutina[]
+  inscripciones Inscripcion[]
 
   // El DNI es único DENTRO de un gimnasio: la misma persona puede ser socia de dos gimnasios.
   @@unique([gimnasioId, dni])
@@ -311,4 +318,71 @@ model AvisoEnviado {
 
   @@unique([socioId, tipo, mes])
   @@map("avisos_enviados")
+}
+
+// Rutina de entrenamiento. Si `socioId` es null es una PLANTILLA: el profe la arma una vez y,
+// al asignarla a un socio, se crea una COPIA (así se puede ajustar sin tocar la plantilla).
+model Rutina {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId    String   @map("gimnasio_id") @db.Uuid
+  socioId       String?  @map("socio_id") @db.Uuid
+  nombre        String
+  descripcion   String   @default("")
+  // Los días con sus ejercicios, como JSON (jsonb). Una rutina siempre se lee y se guarda
+  // entera y nunca buscamos "todas las rutinas con sentadillas": por eso un documento JSON
+  // (validado con Zod) es más simple que dos tablas más. Ver README.
+  dias          Json
+  creadaPorId   String   @map("creada_por_id") @db.Uuid
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio  Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socio     Socio?   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  creadaPor Usuario  @relation(fields: [creadaPorId], references: [id], onDelete: Restrict)
+
+  @@index([gimnasioId, socioId])
+  @@map("rutinas")
+}
+
+// Clase semanal con cupo: "Funcional, lunes 19:00, 60 min, 15 lugares".
+// Se repite todas las semanas; las inscripciones son por FECHA concreta.
+model Clase {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId      String   @map("gimnasio_id") @db.Uuid
+  nombre          String
+  profesorId      String?  @map("profesor_id") @db.Uuid
+  // 1 = lunes … 7 = domingo (como la norma ISO).
+  diaSemana       Int      @map("dia_semana")
+  // "19:00", hora de Argentina.
+  horaInicio      String   @map("hora_inicio")
+  duracionMinutos Int      @map("duracion_minutos")
+  cupo            Int
+  activa          Boolean  @default(true)
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn   DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  gimnasio      Gimnasio      @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  profesor      Usuario?      @relation(fields: [profesorId], references: [id], onDelete: SetNull)
+  inscripciones Inscripcion[]
+
+  @@index([gimnasioId, diaSemana])
+  @@map("clases")
+}
+
+// Un socio anotado a una clase en una fecha. El @@unique impide anotarse dos veces.
+model Inscripcion {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId String   @map("gimnasio_id") @db.Uuid
+  claseId    String   @map("clase_id") @db.Uuid
+  socioId    String   @map("socio_id") @db.Uuid
+  fecha      DateTime @db.Date
+  creadoEn   DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  clase    Clase    @relation(fields: [claseId], references: [id], onDelete: Cascade)
+  socio    Socio    @relation(fields: [socioId], references: [id], onDelete: Cascade)
+
+  @@unique([claseId, fecha, socioId])
+  @@index([claseId, fecha])
+  @@map("inscripciones")
 }

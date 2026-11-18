@@ -9,5 +9,7 @@ export * from './texto';
 export * from './pagos';
 export * from './cuotas';
 export * from './ingresos';
+export * from './rutinas';
+export * from './clases';
 
 export const NOMBRE_APP = 'GimnasioApp';

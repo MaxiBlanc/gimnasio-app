@@ -20,7 +20,7 @@ export function autorizacionDe(usuario: { id: string; rol: RolSesion; gimnasioId
  */
 export async function vaciarBase() {
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE avisos_enviados, ingresos, pagos, sesiones, tokens_socio, socios, descuentos, planes, usuarios, gimnasios
+    TRUNCATE TABLE inscripciones, clases, rutinas, avisos_enviados, ingresos, pagos, sesiones, tokens_socio, socios, descuentos, planes, usuarios, gimnasios
     RESTART IDENTITY CASCADE
   `);
 }
