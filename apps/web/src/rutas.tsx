@@ -118,12 +118,14 @@ export const enrutador = createBrowserRouter([
           </ConSesion>
         ),
       },
-      {
-        path: '/socio',
+      ...(['inicio', 'rutinas', 'clases'] as const).map((seccion) => ({
+        path: seccion === 'inicio' ? '/socio' : `/socio/${seccion}`,
         element: (
-          <ConSesion roles={['SOCIO']}>{(usuario) => <MiCuenta usuario={usuario} />}</ConSesion>
+          <ConSesion roles={['SOCIO']}>
+            {(usuario) => <MiCuenta usuario={usuario} seccion={seccion} />}
+          </ConSesion>
         ),
-      },
+      })),
       { path: '/admin/ingresar', element: <LoginAdmin /> },
       {
         path: '/panel',

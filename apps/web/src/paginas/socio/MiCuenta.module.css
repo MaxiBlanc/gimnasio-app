@@ -134,3 +134,56 @@
 .capitalizar::first-letter {
   text-transform: uppercase;
 }
+
+/* ── Navegación de abajo (al alcance del pulgar) ── */
+.pantalla {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+.navegacion {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--superficie);
+  border-top: 1px solid var(--linea);
+}
+.pestana {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--tinta-suave);
+  text-decoration: none;
+}
+.pestana:global(.active) {
+  color: var(--tinta);
+  box-shadow: inset 0 3px 0 var(--marca);
+}
+
+/* ── Rutinas ── */
+.rutina {
+  padding: 1rem 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+.rutina > summary {
+  display: grid;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+.rutina[open] > summary {
+  margin-bottom: 0.75rem;
+}
+.nombreRutina {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.descripcion {
+  margin: 0 0 0.75rem;
+  color: var(--tinta-suave);
+}

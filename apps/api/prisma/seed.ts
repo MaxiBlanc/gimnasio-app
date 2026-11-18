@@ -379,6 +379,23 @@ async function main() {
     where: { gimnasioId: power.id, rol: Rol.PROFESOR },
   });
   await cargarClasesYRutinas(power.id, profe.id, sociosPower);
+  // Juan (el socio con login) ya tiene su copia de la plantilla, como si se la hubiera asignado el profe.
+  const plantilla = await prisma.rutina.findFirstOrThrow({
+    where: { gimnasioId: power.id, socioId: null, nombre: 'Principiante full body' },
+  });
+  const juan = await prisma.socio.findFirstOrThrow({
+    where: { gimnasioId: power.id, dni: '30111222' },
+  });
+  await prisma.rutina.create({
+    data: {
+      gimnasioId: power.id,
+      socioId: juan.id,
+      creadaPorId: profe.id,
+      nombre: plantilla.nombre,
+      descripcion: plantilla.descripcion,
+      dias: plantilla.dias ?? [],
+    },
+  });
 
   // ── Segundo gimnasio: sirve para comprobar que nadie ve datos de otro gimnasio ──
   const titan = await prisma.gimnasio.create({
