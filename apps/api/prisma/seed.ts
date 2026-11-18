@@ -21,6 +21,8 @@ const CONTRASENA_SOCIO = process.env['SEED_CONTRASENA_SOCIO'] ?? 'Socio1234';
 
 async function limpiarBase() {
   // Orden inverso a las dependencias: primero lo que apunta a otras tablas.
+  await prisma.avisoEnviado.deleteMany();
+  await prisma.ingreso.deleteMany();
   await prisma.pago.deleteMany();
   await prisma.sesion.deleteMany();
   await prisma.tokenSocio.deleteMany();
@@ -29,6 +31,43 @@ async function limpiarBase() {
   await prisma.plan.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.gimnasio.deleteMany();
+}
+
+/**
+ * Entradas de ejemplo de las últimas 4 semanas, para que el tablero del dueño y la
+ * ocupación muestren algo. Usamos un generador "pseudoaleatorio" con semilla fija:
+ * cada vez que corrés el seed salen los mismos datos (más fácil de comparar).
+ */
+async function cargarIngresos(gimnasioId: string, socios: string[]) {
+  let semilla = 42;
+  const azar = () => {
+    semilla = (semilla * 1103515245 + 12345) % 2 ** 31;
+    return semilla / 2 ** 31;
+  };
+  // Horas pico de un gimnasio: temprano, mediodía y después del trabajo.
+  const HORAS = [7, 8, 8, 9, 12, 13, 18, 18, 19, 19, 20, 21];
+  const HORA_MS = 60 * 60 * 1000;
+  const ahora = Date.now();
+  // 00:00 de hoy en Argentina (UTC-3), en milisegundos.
+  const hoy = new Date(
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(ahora) +
+      'T03:00:00Z',
+  ).getTime();
+
+  const datos: { gimnasioId: string; socioId: string; creadoEn: Date }[] = [];
+  for (let dia = 28; dia >= 0; dia--) {
+    for (const socioId of socios) {
+      if (azar() > 0.5) continue; // cada socio viene más o menos día por medio
+      const hora = HORAS[Math.floor(azar() * HORAS.length)]!;
+      const creadoEn = hoy - dia * 24 * HORA_MS + (hora + azar()) * HORA_MS;
+      if (creadoEn < ahora) datos.push({ gimnasioId, socioId, creadoEn: new Date(creadoEn) });
+    }
+  }
+  // Y algunos que llegaron hace un rato, para que la ocupación no esté en cero.
+  for (const [i, socioId] of socios.slice(0, 3).entries()) {
+    datos.push({ gimnasioId, socioId, creadoEn: new Date(ahora - (10 + i * 15) * 60 * 1000) });
+  }
+  await prisma.ingreso.createMany({ data: datos });
 }
 
 async function main() {
@@ -60,7 +99,7 @@ async function main() {
       slug: 'power-gym',
       colorPrimario: '#FFC300',
       colorSecundario: '#1A1E23',
-      capacidadMaxima: 80,
+      capacidadMaxima: 20, // chico, para que con los socios de prueba la ocupación se mueva
     },
   });
 
@@ -177,6 +216,7 @@ async function main() {
     },
   ];
 
+  const sociosPower: string[] = [];
   for (const caso of casos) {
     const socio = await prisma.socio.create({
       data: {
@@ -194,6 +234,7 @@ async function main() {
         textoBusqueda: textoBusquedaSocio(caso),
       },
     });
+    sociosPower.push(socio.id);
 
     const precio = Number(caso.plan.precio);
     const descuento = caso.conDescuento ? precio * 0.1 : 0;
@@ -225,6 +266,8 @@ async function main() {
       });
     }
   }
+
+  await cargarIngresos(power.id, sociosPower);
 
   // ── Segundo gimnasio: sirve para comprobar que nadie ve datos de otro gimnasio ──
   const titan = await prisma.gimnasio.create({
@@ -259,6 +302,7 @@ async function main() {
   });
 
   const totales = {
+    ingresos: await prisma.ingreso.count(),
     gimnasios: await prisma.gimnasio.count(),
     usuarios: await prisma.usuario.count(),
     socios: await prisma.socio.count(),

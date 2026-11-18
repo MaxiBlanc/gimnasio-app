@@ -1,7 +1,10 @@
+import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { ResumenCuotas as Resumen } from '@gimnasio/compartido';
 import { pedir } from '../api/cliente';
+import { Ocupacion } from '../componentes/Ocupacion';
 import { ResumenCuotas } from '../componentes/ResumenCuotas';
+import { Tablero } from './tablero/Tablero';
 import { useSesion } from '../sesion/sesion';
 import estilos from './paginas.module.css';
 
@@ -44,13 +47,24 @@ export function InicioPanel() {
         </section>
       )}
 
+      {veCuotas && <Ocupacion />}
+
+      {usuario?.rol === 'DUENO' && (
+        <section className={estilos.seccion} aria-labelledby="titulo-tablero">
+          <h2 id="titulo-tablero" className={estilos.tituloSeccion}>
+            Cómo viene el gimnasio
+          </h2>
+          <Tablero />
+        </section>
+      )}
+
       {usuario?.rol === 'PROFESOR' && (
         <p className="texto-suave">Desde acá vas a poder ver a los socios y armar sus rutinas.</p>
       )}
       {usuario?.rol === 'KIOSCO' && (
         <p className="texto-suave">
-          Este usuario es para la tablet de la entrada. La pantalla de ingreso por DNI llega en la
-          etapa 2.
+          Este usuario es para la tablet de la entrada.{' '}
+          <Link to="/ingreso">Abrir la pantalla de ingreso</Link>
         </p>
       )}
     </div>

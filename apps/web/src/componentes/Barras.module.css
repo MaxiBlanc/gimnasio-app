@@ -1,0 +1,98 @@
+.figura {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.titulo {
+  font-weight: 700;
+}
+
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px; /* separación fina entre barras */
+  height: 10rem;
+  /* Línea base recesiva: no compite con las barras. */
+  border-bottom: 1px solid var(--linea);
+}
+
+.columna {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  outline: none;
+}
+
+/* Barras neutras (contraste seguro con cualquier color de marca); la destacada, con la marca. */
+.barra {
+  min-height: 2px;
+  background: color-mix(in srgb, var(--tinta) 55%, var(--superficie));
+  border-radius: 4px 4px 0 0;
+  transition: background 0.15s;
+}
+.barra[data-destacada='true'] {
+  background: var(--marca);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tinta) 25%, transparent);
+}
+.columna:hover .barra,
+.columna:focus-visible .barra {
+  background: var(--tinta);
+}
+
+.etiqueta {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--tinta-suave);
+  white-space: nowrap;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.25rem);
+  left: 50%;
+  z-index: 1;
+  display: none;
+  gap: 0.1rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-chico);
+  box-shadow: var(--sombra);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.columna:hover .tooltip,
+.columna:focus-visible .tooltip {
+  display: grid;
+}
+/* Que el tooltip de las primeras y últimas barras no se salga de la tarjeta. */
+.columna:first-child .tooltip,
+.columna:nth-child(2) .tooltip {
+  left: 0;
+  transform: none;
+}
+.columna:last-child .tooltip,
+.columna:nth-last-child(2) .tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+/* Lugar para las etiquetas que van debajo. */
+.figura .grafico {
+  margin-bottom: 1.25rem;
+}
