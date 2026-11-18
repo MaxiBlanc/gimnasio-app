@@ -10,7 +10,8 @@ const esquemaEntorno = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PUERTO: z.coerce.number().int().positive().default(3000),
   ORIGEN_WEB: z.url().default('http://localhost:5173'),
-  DATABASE_URL: z.string().startsWith('postgresql://', 'Debe ser una URL de PostgreSQL'),
+  // Neon y otros proveedores a veces la dan como postgres:// (es lo mismo).
+  DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'Debe ser una URL de PostgreSQL'),
   // Clave con la que se firman los JWT. Si alguien la conoce, puede fabricar tokens válidos.
   JWT_SECRETO: z.string().min(32, 'Debe tener al menos 32 caracteres'),
   MINUTOS_TOKEN_ACCESO: z.coerce.number().int().positive().default(15),

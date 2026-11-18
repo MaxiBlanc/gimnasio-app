@@ -266,6 +266,31 @@ Decisiones:
 - **PWA instalable:** manifest e íconos, y un service worker propio (`public/sw.js`) que **nunca guarda la API en caché** (cuotas y pagos tienen que ser siempre los reales). Guarda los archivos de Vite (llevan un hash en el nombre) y la última versión de la página para abrir sin conexión. Solo se registra en producción: para probarlo, `npm run build` y `npm run preview -w @gimnasio/web` (http://localhost:4173).
 - **Las rutas protegidas son solo comodidad**: la seguridad real está en la API, que valida el rol en cada pedido.
 
+## Deploy (Vercel + Neon, plan gratis)
+
+Demo online: https://gimnasio-app-flax.vercel.app
+
+- **Todo en un solo proyecto de Vercel:** la web se sirve como archivos estáticos y la API entera corre como **una función** en `/api/*`. Al estar en el mismo dominio, la cookie de refresco sigue siendo `sameSite: strict` y no hace falta CORS.
+- **Lo armamos nosotros** con `scripts/construir-vercel.mjs` (Build Output API de Vercel): Vite compila la web y **esbuild empaqueta la API en un solo archivo** (incluye el paquete compartido y el cliente de Prisma). Así evitamos que la detección automática de Vercel se confunda con el monorepo.
+- **Base de datos:** Neon (Postgres serverless), creada desde la pestaña Storage del proyecto. Vercel inyecta `DATABASE_URL` sola.
+- **Variables en Vercel (Production):** `DATABASE_URL`, `JWT_SECRETO`, `NODE_ENV=production`, `ORIGEN_WEB` (la URL pública, para los links de activación).
+- **Correo:** todavía sin proveedor en producción; la app avisa que el mail no se pudo enviar.
+
+Para deployar una versión nueva (necesita `npx vercel login` una vez):
+
+```bash
+npm run build:vercel
+npm run deploy
+```
+
+Migraciones nuevas contra Neon, con la URL **sin pooler** (`DATABASE_URL_UNPOOLED`) en un `.env.produccion` local (está en `.gitignore`):
+
+```bash
+cd apps/api && node --env-file=../../.env.produccion ../../node_modules/prisma/build/index.js migrate deploy
+```
+
+El seed acepta `SEED_CONTRASENA_STAFF` y `SEED_CONTRASENA_SOCIO`, para que la demo online **no** use las contraseñas de prueba que figuran abajo.
+
 ## Tests
 
 `npm test` corre los tests contra una **base de datos aparte** (contenedor `postgres_test`), así que necesita Docker levantado. Antes de empezar aplica las migraciones a esa base, y cada test arranca con la base vacía y sus propios datos.

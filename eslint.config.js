@@ -6,7 +6,15 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/generated/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '.vercel/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/generated/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -19,3 +19,6 @@ Thumbs.db
 
 # Cliente de Prisma generado (se regenera con "prisma generate")
 apps/api/src/generated/
+
+# Archivos locales con datos privados (credenciales de la demo, etc.)
+*.local.md

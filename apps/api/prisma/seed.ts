@@ -14,8 +14,10 @@ import { FormaPago, Rol, TipoDescuento } from '../src/generated/prisma/enums';
 import { hoyEnArgentina, mesDeFecha, periodoDePago, sumarMeses } from '../src/dominio/periodos';
 import { textoBusquedaSocio } from '../src/modulos/socios/socios.servicio';
 
-const CONTRASENA_STAFF = 'Gimnasio123';
-const CONTRASENA_SOCIO = 'Socio1234';
+// En producción se pasan otras contraseñas por variable de entorno, para que las de
+// este archivo (que están en el README) no sirvan para entrar a la demo publicada.
+const CONTRASENA_STAFF = process.env['SEED_CONTRASENA_STAFF'] ?? 'Gimnasio123';
+const CONTRASENA_SOCIO = process.env['SEED_CONTRASENA_SOCIO'] ?? 'Socio1234';
 
 async function limpiarBase() {
   // Orden inverso a las dependencias: primero lo que apunta a otras tablas.
