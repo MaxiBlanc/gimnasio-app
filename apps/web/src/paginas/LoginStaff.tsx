@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import { esquemaLoginStaff, type GimnasioSesion } from '@gimnasio/compartido';
+import { esquemaLoginSocio, esquemaLoginStaff, type GimnasioSesion } from '@gimnasio/compartido';
 import { ErrorApi, pedir } from '../api/cliente';
 import { mostrarErrorEnFormulario } from '../api/formularios';
 import { Campo } from '../componentes/Campo';
@@ -13,12 +13,23 @@ import { guardarUltimoGimnasio } from '../sesion/ultimoGimnasio';
 import { aplicarMarca, MARCA_APP } from '../tema/marca';
 import estilos from './ingreso.module.css';
 
-// El formulario no pide el gimnasio: sale de la URL (/g/power-gym).
-const esquemaFormulario = esquemaLoginStaff.omit({ gimnasio: true });
+// Los formularios no piden el gimnasio: sale de la URL (/g/power-gym).
+// El del personal pide email; el del socio, DNI. Un esquema que acepta los dos campos
+// opcionales no validaría bien, así que elegimos uno u otro según la pantalla.
+const esquemaStaff = esquemaLoginStaff.omit({ gimnasio: true });
+const esquemaSocio = esquemaLoginSocio.omit({ gimnasio: true });
 
-export function LoginStaff() {
+type DatosFormulario = { email?: string; dni?: string; contrasena: string };
+
+interface Props {
+  /** true: login del socio (/g/:slug/socio). false: login del personal (/g/:slug). */
+  socio?: boolean;
+}
+
+/** Login dentro de un gimnasio, con su marca. Sirve para el personal y para los socios. */
+export function LoginStaff({ socio = false }: Props) {
   const { slug = '' } = useParams();
-  const { usuario, ingresarStaff } = useSesion();
+  const { usuario, ingresarStaff, ingresarSocio } = useSesion();
   const navegar = useNavigate();
   const [errorGeneral, setErrorGeneral] = useState<string>();
 
@@ -32,11 +43,19 @@ export function LoginStaff() {
     aplicarMarca(marca.data ?? MARCA_APP);
   }, [marca.data]);
 
-  const formulario = useForm({ resolver: zodResolver(esquemaFormulario) });
+  // `useForm` necesita UN tipo de datos: { email?, dni?, contrasena }. El resolver valida con el
+  // esquema que corresponde, así que en la práctica solo llega el campo de esta pantalla.
+  const formulario = useForm<DatosFormulario>({
+    resolver: zodResolver(socio ? esquemaSocio : esquemaStaff) as Resolver<DatosFormulario>,
+  });
+  const destino = socio ? '/socio' : '/panel';
   const { errors: errores, isSubmitting: enviando } = formulario.formState;
 
   // Si ya hay sesión en este gimnasio, no tiene sentido mostrar el login.
-  if (usuario?.gimnasio?.slug === slug) return <Navigate to="/panel" replace />;
+  const esSocio = usuario?.rol === 'SOCIO';
+  if (usuario?.gimnasio?.slug === slug && esSocio === socio) {
+    return <Navigate to={destino} replace />;
+  }
 
   if (marca.isError) {
     const noExiste = marca.error instanceof ErrorApi && marca.error.estado === 404;
@@ -62,9 +81,19 @@ export function LoginStaff() {
   const enviar = formulario.handleSubmit(async (datos) => {
     setErrorGeneral(undefined);
     try {
-      const usuarioLogueado = await ingresarStaff({ ...datos, gimnasio: slug });
+      const usuarioLogueado = socio
+        ? await ingresarSocio({
+            dni: datos.dni ?? '',
+            contrasena: datos.contrasena,
+            gimnasio: slug,
+          })
+        : await ingresarStaff({
+            email: datos.email ?? '',
+            contrasena: datos.contrasena,
+            gimnasio: slug,
+          });
       if (usuarioLogueado.gimnasio) guardarUltimoGimnasio(usuarioLogueado.gimnasio);
-      void navegar('/panel', { replace: true });
+      void navegar(destino, { replace: true });
     } catch (error) {
       setErrorGeneral(mostrarErrorEnFormulario(error, formulario.setError));
     }
@@ -77,6 +106,11 @@ export function LoginStaff() {
       colores={marca.data ?? MARCA_APP}
       pie={
         <>
+          {socio ? '¿Trabajás en el gimnasio?' : '¿Sos socio/a?'}{' '}
+          <Link className={estilos.enlace} to={socio ? `/g/${slug}` : `/g/${slug}/socio`}>
+            {socio ? 'Entrá al panel' : 'Entrá a tu cuenta'}
+          </Link>
+          <br />
           ¿No es tu gimnasio?{' '}
           <Link className={estilos.enlace} to="/">
             Elegir otro
@@ -85,8 +119,12 @@ export function LoginStaff() {
       }
     >
       <div className={estilos.encabezado}>
-        <h1 className="titulo-pagina">Ingresá al panel</h1>
-        <p className="texto-suave">Para el equipo del gimnasio: dueño, recepción y profes.</p>
+        <h1 className="titulo-pagina">{socio ? 'Tu cuenta' : 'Ingresá al panel'}</h1>
+        <p className="texto-suave">
+          {socio
+            ? 'Mirá tu cuota, tus pagos y cuánta gente hay en el gimnasio.'
+            : 'Para el equipo del gimnasio: dueño, recepción y profes.'}
+        </p>
       </div>
 
       <form className={estilos.form} onSubmit={enviar} noValidate>
@@ -95,14 +133,25 @@ export function LoginStaff() {
             {errorGeneral}
           </p>
         )}
-        <Campo
-          etiqueta="Email"
-          type="email"
-          autoComplete="username"
-          autoFocus
-          error={errores.email?.message}
-          {...formulario.register('email')}
-        />
+        {socio ? (
+          <Campo
+            etiqueta="DNI"
+            inputMode="numeric"
+            autoComplete="username"
+            autoFocus
+            error={errores.dni?.message}
+            {...formulario.register('dni')}
+          />
+        ) : (
+          <Campo
+            etiqueta="Email"
+            type="email"
+            autoComplete="username"
+            autoFocus
+            error={errores.email?.message}
+            {...formulario.register('email')}
+          />
+        )}
         <Campo
           etiqueta="Contraseña"
           type="password"

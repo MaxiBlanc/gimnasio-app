@@ -1,0 +1,136 @@
+.pantalla {
+  min-height: 100dvh;
+  background: var(--fondo);
+}
+
+/* Barra superior con los colores del gimnasio. */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--marca-oscura);
+  color: var(--sobre-marca-oscura);
+}
+
+.nombreGimnasio {
+  font-size: 1.25rem;
+  color: var(--marca);
+}
+
+.logo {
+  max-height: 2rem;
+  max-width: 10rem;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.25rem;
+}
+.acciones :global(.boton) {
+  color: inherit;
+}
+
+.contenido {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+}
+
+.etiqueta {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+/* La tarjeta de la cuota toma el color del estado (data-estado → --color-estado). */
+.cuota {
+  padding: 1.25rem;
+  background: var(--color-estado-fondo);
+  border: 1px solid color-mix(in srgb, var(--color-estado) 35%, transparent);
+  border-left: 6px solid var(--color-estado);
+  border-radius: var(--radio);
+}
+.cuota .etiqueta {
+  color: var(--color-estado);
+}
+
+.estado {
+  margin: 0;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--color-estado);
+}
+
+.detalle {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.plan {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--tinta-suave);
+}
+
+.visitas {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.cifra {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.pagos {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.pago {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+}
+.pago + .pago {
+  border-top: 1px solid var(--linea);
+}
+.pago > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.fecha {
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+}
+
+.capitalizar {
+  display: inline-block;
+}
+.capitalizar::first-letter {
+  text-transform: uppercase;
+}

@@ -1,0 +1,85 @@
+.tarjeta {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.cifra {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 1;
+}
+
+.unidad {
+  font-size: 1rem;
+  font-weight: 500;
+  font-stretch: 100%;
+  color: var(--tinta-suave);
+}
+
+/* Reusamos los colores de las cuotas: verde = tranqui, amarillo = movido, rojo = lleno. */
+.nivel {
+  margin-left: auto;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-stretch: 100%;
+}
+.nivel[data-nivel='BAJA'],
+.relleno[data-nivel='BAJA'] {
+  --color: var(--al-dia);
+  --color-fondo: var(--al-dia-fondo);
+}
+.nivel[data-nivel='MEDIA'],
+.relleno[data-nivel='MEDIA'] {
+  --color: var(--por-vencer);
+  --color-fondo: var(--por-vencer-fondo);
+}
+.nivel[data-nivel='ALTA'],
+.relleno[data-nivel='ALTA'] {
+  --color: var(--vencido);
+  --color-fondo: var(--vencido-fondo);
+}
+.nivel {
+  color: var(--color);
+  background: var(--color-fondo);
+}
+
+.barra {
+  height: 0.5rem;
+  overflow: hidden;
+  background: var(--superficie-2);
+  border-radius: 999px;
+}
+
+.relleno {
+  height: 100%;
+  background: var(--color, var(--marca));
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+}

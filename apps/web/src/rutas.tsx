@@ -18,6 +18,7 @@ import { PlanesDescuentos } from './paginas/planes/PlanesDescuentos';
 import { SocioFicha } from './paginas/socios/SocioFicha';
 import { SocioEditar, SocioNuevo } from './paginas/socios/SocioNuevo';
 import { SociosLista } from './paginas/socios/SociosLista';
+import { MiCuenta } from './paginas/socio/MiCuenta';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
 
@@ -60,7 +61,8 @@ function ConSesion({ roles, children }: PropsConSesion) {
   if (!usuario || !roles.includes(usuario.rol)) {
     if (roles.includes('SUPERADMIN')) return <Navigate to="/admin/ingresar" replace />;
     const ultimo = leerUltimoGimnasio();
-    return <Navigate to={ultimo ? `/g/${ultimo.slug}` : '/'} replace />;
+    const login = roles.includes('SOCIO') ? '/socio' : '';
+    return <Navigate to={ultimo ? `/g/${ultimo.slug}${login}` : '/'} replace />;
   }
   return children(usuario);
 }
@@ -79,7 +81,14 @@ export const enrutador = createBrowserRouter([
     children: [
       { path: '/', element: <ElegirGimnasio /> },
       { path: '/g/:slug', element: <LoginStaff /> },
+      { path: '/g/:slug/socio', element: <LoginStaff socio /> },
       { path: '/g/:slug/activar', element: <ActivarCuenta /> },
+      {
+        path: '/socio',
+        element: (
+          <ConSesion roles={['SOCIO']}>{(usuario) => <MiCuenta usuario={usuario} />}</ConSesion>
+        ),
+      },
       { path: '/admin/ingresar', element: <LoginAdmin /> },
       {
         path: '/panel',

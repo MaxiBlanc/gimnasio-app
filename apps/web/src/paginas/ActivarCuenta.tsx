@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
@@ -76,6 +76,9 @@ export function ActivarCuenta() {
           <p className="texto-suave">
             Desde ahora entrás con tu DNI y la contraseña que acabás de elegir.
           </p>
+          <Link className="boton boton-principal" to={`/g/${slug}/socio`}>
+            Entrar a mi cuenta
+          </Link>
         </div>
       ) : (
         <>

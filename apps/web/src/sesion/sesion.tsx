@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type {
   DatosLoginAdmin,
+  DatosLoginSocio,
   DatosLoginStaff,
   RespuestaSesion,
   UsuarioSesion,
@@ -22,6 +23,7 @@ interface ValorSesion {
   usuario: UsuarioSesion | null;
   ingresarStaff: (datos: DatosLoginStaff) => Promise<UsuarioSesion>;
   ingresarAdmin: (datos: DatosLoginAdmin) => Promise<UsuarioSesion>;
+  ingresarSocio: (datos: DatosLoginSocio) => Promise<UsuarioSesion>;
   salir: () => Promise<void>;
 }
 
@@ -53,6 +55,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     usuario,
     ingresarStaff: (datos) => ingresar('/auth/login', datos),
     ingresarAdmin: (datos) => ingresar('/auth/admin/login', datos),
+    ingresarSocio: (datos) => ingresar('/auth/socio/login', datos),
     salir: async () => {
       await pedir('/auth/salir', { metodo: 'POST', sinSesion: true }).catch(() => undefined);
       fijarSesion(null);
