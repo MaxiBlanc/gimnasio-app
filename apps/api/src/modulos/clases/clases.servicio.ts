@@ -28,7 +28,12 @@ const claseNoEncontrada = () => new ErrorApp(404, 'CLASE_NO_ENCONTRADA', 'No exi
 async function verificarProfesor(gimnasioId: string, profesorId: string | null | undefined) {
   if (!profesorId) return;
   const profesor = await prisma.usuario.findFirst({
-    where: { id: profesorId, gimnasioId, activo: true, rol: { in: [Rol.PROFESOR, Rol.DUENO] } },
+    where: {
+      id: profesorId,
+      gimnasioId,
+      activo: true,
+      roles: { hasSome: [Rol.PROFESOR, Rol.DUENO] },
+    },
     select: { id: true },
   });
   if (!profesor) throw new ErrorApp(400, 'PROFESOR_INVALIDO', 'Ese profesor no existe');
@@ -47,7 +52,7 @@ export async function listarClases(gimnasioId: string): Promise<Clase[]> {
 /** Para el selector de "quién la da". */
 export async function listarProfesores(gimnasioId: string) {
   return prisma.usuario.findMany({
-    where: { gimnasioId, activo: true, rol: { in: [Rol.PROFESOR, Rol.DUENO] } },
+    where: { gimnasioId, activo: true, roles: { hasSome: [Rol.PROFESOR, Rol.DUENO] } },
     select: { id: true, nombre: true },
     orderBy: { nombre: 'asc' },
   });

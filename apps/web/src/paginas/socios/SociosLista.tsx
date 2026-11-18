@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import {
+  tieneRol,
   ESTADOS_CUOTA,
   NOMBRES_ESTADO_CUOTA,
   type EstadoCuota as Estado,
@@ -26,7 +27,7 @@ const POR_PAGINA = 20;
  */
 export function SociosLista() {
   const { usuario } = useSesion();
-  const puedeEditar = usuario?.rol === 'DUENO' || usuario?.rol === 'RECEPCION';
+  const puedeEditar = usuario ? tieneRol(usuario, 'DUENO', 'RECEPCION') : false;
   const [parametros, setParametros] = useSearchParams();
 
   const busqueda = parametros.get('busqueda') ?? '';

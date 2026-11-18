@@ -5,6 +5,7 @@ import type { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import {
+  tieneRol,
   esquemaCrearClase,
   NOMBRES_DIA_SEMANA,
   type Clase,
@@ -25,7 +26,7 @@ import { agruparPorFecha, tituloDeFecha } from './fechas';
 /** Clases del gimnasio: la agenda de la semana (con anotados) y el cronograma fijo. */
 export function Clases() {
   const { usuario } = useSesion();
-  const esDueno = usuario?.rol === 'DUENO';
+  const esDueno = usuario ? tieneRol(usuario, 'DUENO') : false;
   // undefined = cerrado; null = nueva; un objeto = editar esa.
   const [editando, setEditando] = useState<Clase | null>();
 

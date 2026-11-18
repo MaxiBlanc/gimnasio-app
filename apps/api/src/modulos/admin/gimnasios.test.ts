@@ -77,14 +77,14 @@ describe('POST /api/admin/gimnasios', () => {
       nombre: 'Iron Box',
       slug: 'iron-box',
       colorPrimario: '#00FF88', // normalizado a mayúsculas
-      usuarios: [{ nombre: 'Pedro Iron', email: 'pedro@ironbox.com', rol: 'DUENO' }],
+      usuarios: [{ nombre: 'Pedro Iron', email: 'pedro@ironbox.com', roles: ['DUENO'] }],
     });
 
     const login = await request(app)
       .post('/api/auth/login')
       .send({ gimnasio: 'iron-box', email: 'pedro@ironbox.com', contrasena: 'IronBox2026' });
     expect(login.status).toBe(200);
-    expect(login.body.usuario.rol).toBe('DUENO');
+    expect(login.body.usuario.roles).toEqual(['DUENO']);
   });
 
   it('rechaza un slug que ya existe con 409, sin crear nada', async () => {

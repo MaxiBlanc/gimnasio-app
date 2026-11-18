@@ -126,7 +126,7 @@ describe('GET /api/mi-cuenta (socio)', () => {
     await ingresar('30111222');
     const token = autorizacionDe({
       id: socio.id,
-      rol: 'SOCIO',
+      roles: ['SOCIO'],
       gimnasioId: escenario.gimnasioA.gimnasio.id,
     });
 

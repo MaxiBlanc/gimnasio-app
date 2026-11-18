@@ -195,7 +195,7 @@ async function main() {
       nombre: 'Súper Admin',
       email: 'admin@gimnasioapp.com',
       hashContrasena: hashStaff,
-      rol: Rol.SUPERADMIN,
+      roles: [Rol.SUPERADMIN],
     },
   });
 
@@ -211,16 +211,21 @@ async function main() {
   });
 
   const staff = [
-    { nombre: 'Martín Dueño', email: 'dueno@powergym.com', rol: Rol.DUENO },
-    { nombre: 'Laura Recepción', email: 'recepcion@powergym.com', rol: Rol.RECEPCION },
-    { nombre: 'Pablo Profesor', email: 'profe@powergym.com', rol: Rol.PROFESOR },
-    { nombre: 'Tablet de ingreso', email: 'ingreso@powergym.com', rol: Rol.KIOSCO },
+    { nombre: 'Martín Dueño', email: 'dueno@powergym.com', roles: [Rol.DUENO] },
+    { nombre: 'Laura Recepción', email: 'recepcion@powergym.com', roles: [Rol.RECEPCION] },
+    { nombre: 'Pablo Profesor', email: 'profe@powergym.com', roles: [Rol.PROFESOR] },
+    { nombre: 'Tablet de ingreso', email: 'ingreso@powergym.com', roles: [Rol.KIOSCO] },
+    {
+      nombre: 'Carla Recepción y Profe',
+      email: 'carla@powergym.com',
+      roles: [Rol.RECEPCION, Rol.PROFESOR],
+    },
   ];
   await prisma.usuario.createMany({
     data: staff.map((u) => ({ ...u, gimnasioId: power.id, hashContrasena: hashStaff })),
   });
   const recepcion = await prisma.usuario.findFirstOrThrow({
-    where: { gimnasioId: power.id, rol: Rol.RECEPCION },
+    where: { gimnasioId: power.id, email: 'recepcion@powergym.com' },
   });
 
   const mensual = await prisma.plan.create({
@@ -376,7 +381,7 @@ async function main() {
 
   await cargarIngresos(power.id, sociosPower);
   const profe = await prisma.usuario.findFirstOrThrow({
-    where: { gimnasioId: power.id, rol: Rol.PROFESOR },
+    where: { gimnasioId: power.id, email: 'profe@powergym.com' },
   });
   await cargarClasesYRutinas(power.id, profe.id, sociosPower);
   // Juan (el socio con login) ya tiene su copia de la plantilla, como si se la hubiera asignado el profe.
@@ -407,7 +412,7 @@ async function main() {
       nombre: 'Rocío Dueña',
       email: 'duena@titanfitness.com',
       hashContrasena: hashStaff,
-      rol: Rol.DUENO,
+      roles: [Rol.DUENO],
     },
   });
   const planTitan = await prisma.plan.create({

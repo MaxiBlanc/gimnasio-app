@@ -10,8 +10,12 @@ export const CONTRASENA_PRUEBA = 'Clave1234';
  * Header Authorization listo para usar en un test, firmado directamente (sin pasar por /login).
  * El login ya tiene sus propios tests; acá solo queremos "ser" ese usuario.
  */
-export function autorizacionDe(usuario: { id: string; rol: RolSesion; gimnasioId: string | null }) {
-  return `Bearer ${firmarTokenAcceso({ usuarioId: usuario.id, rol: usuario.rol, gimnasioId: usuario.gimnasioId })}`;
+export function autorizacionDe(usuario: {
+  id: string;
+  roles: RolSesion[];
+  gimnasioId: string | null;
+}) {
+  return `Bearer ${firmarTokenAcceso({ usuarioId: usuario.id, roles: usuario.roles, gimnasioId: usuario.gimnasioId })}`;
 }
 
 /**
@@ -41,7 +45,7 @@ export async function crearEscenarioBase() {
           nombre: `${prefijo} ${nombre}`,
           email: `${prefijo}@${slug}.com`,
           hashContrasena: hash,
-          rol,
+          roles: [rol],
         },
       });
     return {
@@ -58,7 +62,7 @@ export async function crearEscenarioBase() {
       nombre: 'Súper Admin',
       email: 'admin@test.com',
       hashContrasena: hash,
-      rol: Rol.SUPERADMIN,
+      roles: [Rol.SUPERADMIN],
     },
   });
 

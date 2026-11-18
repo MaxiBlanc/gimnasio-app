@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Pencil, Wallet } from 'lucide-react';
 import {
+  tieneRol,
   NOMBRES_ESTADO_CUOTA,
   NOMBRES_FORMA_PAGO,
   type Pago,
@@ -55,9 +56,9 @@ export function SocioFicha() {
   const ubicacion = useLocation();
   const { usuario } = useSesion();
   const clienteQuery = useQueryClient();
-  const puedeEditar = usuario?.rol === 'DUENO' || usuario?.rol === 'RECEPCION';
-  const esDueno = usuario?.rol === 'DUENO';
-  const armaRutinas = esDueno || usuario?.rol === 'PROFESOR';
+  const puedeEditar = usuario ? tieneRol(usuario, 'DUENO', 'RECEPCION') : false;
+  const esDueno = usuario ? tieneRol(usuario, 'DUENO') : false;
+  const armaRutinas = usuario ? tieneRol(usuario, 'DUENO', 'PROFESOR') : false;
 
   const [aviso, setAviso] = useState<string | undefined>(
     (ubicacion.state as { aviso?: string } | null)?.aviso,

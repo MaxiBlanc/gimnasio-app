@@ -57,8 +57,8 @@ export async function obtenerGimnasio(id: string): Promise<GimnasioAdminDetalle>
     select: {
       ...seleccionGimnasio,
       usuarios: {
-        select: { id: true, nombre: true, email: true, rol: true, activo: true },
-        orderBy: [{ rol: 'asc' }, { nombre: 'asc' }],
+        select: { id: true, nombre: true, email: true, roles: true, activo: true },
+        orderBy: [{ roles: 'asc' }, { nombre: 'asc' }],
       },
     },
   });
@@ -91,7 +91,7 @@ export async function crearGimnasio(datos: DatosCrearGimnasio): Promise<Gimnasio
         nombre: datos.dueno.nombre,
         email: datos.dueno.email,
         hashContrasena,
-        rol: Rol.DUENO,
+        roles: [Rol.DUENO],
       },
     });
     return nuevo;

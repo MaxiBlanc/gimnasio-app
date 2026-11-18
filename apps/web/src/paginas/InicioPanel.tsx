@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import type { ResumenCuotas as Resumen } from '@gimnasio/compartido';
+import { tieneRol, type ResumenCuotas as Resumen } from '@gimnasio/compartido';
 import { pedir } from '../api/cliente';
 import { Ocupacion } from '../componentes/Ocupacion';
 import { ResumenCuotas } from '../componentes/ResumenCuotas';
@@ -17,7 +17,7 @@ const fechaDeHoy = new Intl.DateTimeFormat('es-AR', {
 
 export function InicioPanel() {
   const { usuario } = useSesion();
-  const veCuotas = usuario?.rol === 'DUENO' || usuario?.rol === 'RECEPCION';
+  const veCuotas = usuario ? tieneRol(usuario, 'DUENO', 'RECEPCION') : false;
 
   const resumen = useQuery({
     queryKey: ['socios', 'resumen-cuotas'],
@@ -49,7 +49,7 @@ export function InicioPanel() {
 
       {veCuotas && <Ocupacion />}
 
-      {usuario?.rol === 'DUENO' && (
+      {usuario && tieneRol(usuario, 'DUENO') && (
         <section className={estilos.seccion} aria-labelledby="titulo-tablero">
           <h2 id="titulo-tablero" className={estilos.tituloSeccion}>
             Cómo viene el gimnasio
@@ -58,10 +58,10 @@ export function InicioPanel() {
         </section>
       )}
 
-      {usuario?.rol === 'PROFESOR' && (
+      {usuario && tieneRol(usuario, 'PROFESOR') && (
         <p className="texto-suave">Desde acá vas a poder ver a los socios y armar sus rutinas.</p>
       )}
-      {usuario?.rol === 'KIOSCO' && (
+      {usuario && tieneRol(usuario, 'KIOSCO') && (
         <p className="texto-suave">
           Este usuario es para la tablet de la entrada.{' '}
           <Link to="/ingreso">Abrir la pantalla de ingreso</Link>

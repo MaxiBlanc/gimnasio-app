@@ -31,7 +31,7 @@ describe('POST /api/auth/login (personal del gimnasio)', () => {
     expect(respuesta.body.tokenAcceso).toEqual(expect.any(String));
     expect(respuesta.body.usuario).toMatchObject({
       email: 'dueno@gimnasio-a.com',
-      rol: 'DUENO',
+      roles: ['DUENO'],
       gimnasio: { slug: 'gimnasio-a' },
     });
     // Nunca se devuelve el hash de la contraseña.
@@ -97,7 +97,7 @@ describe('POST /api/auth/admin/login', () => {
       .send({ email: 'admin@test.com', contrasena: CONTRASENA_PRUEBA });
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.usuario).toMatchObject({ rol: 'SUPERADMIN', gimnasio: null });
+    expect(respuesta.body.usuario).toMatchObject({ roles: ['SUPERADMIN'], gimnasio: null });
   });
 
   it('el personal de un gimnasio no puede entrar como súper-admin', async () => {
@@ -133,7 +133,7 @@ describe('GET /api/auth/yo', () => {
       .set('Authorization', `Bearer ${login.body.tokenAcceso}`);
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body).toMatchObject({ email: 'profe@gimnasio-a.com', rol: 'PROFESOR' });
+    expect(respuesta.body).toMatchObject({ email: 'profe@gimnasio-a.com', roles: ['PROFESOR'] });
   });
 });
 

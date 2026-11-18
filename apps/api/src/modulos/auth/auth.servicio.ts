@@ -6,6 +6,7 @@ import type {
   GimnasioSesion,
   UsuarioSesion,
 } from '@gimnasio/compartido';
+import { tieneRol } from '@gimnasio/compartido';
 import { prisma } from '../../db';
 import { ErrorApp } from '../../errores';
 import type { Prisma } from '../../generated/prisma/client';
@@ -43,7 +44,7 @@ const seleccionUsuario = {
   id: true,
   nombre: true,
   email: true,
-  rol: true,
+  roles: true,
   activo: true,
   hashContrasena: true,
   gimnasio: {
@@ -90,13 +91,13 @@ function datosGimnasio({ activo: _activo, ...gimnasio }: SocioConGimnasio['gimna
   return gimnasio;
 }
 
-/** El socio se muestra con la misma forma que un usuario, con rol 'SOCIO'. */
+/** El socio se muestra con la misma forma que un usuario, con roles ['SOCIO']. */
 function socioASesion(socio: SocioConGimnasio): UsuarioSesion {
   return {
     id: socio.id,
     nombre: `${socio.nombre} ${socio.apellido}`,
     email: socio.email,
-    rol: 'SOCIO',
+    roles: ['SOCIO'],
     gimnasio: datosGimnasio(socio.gimnasio),
   };
 }
@@ -108,7 +109,7 @@ function aUsuarioSesion(usuario: UsuarioConGimnasio): UsuarioSesion {
     id: usuario.id,
     nombre: usuario.nombre,
     email: usuario.email,
-    rol: usuario.rol,
+    roles: usuario.roles,
     gimnasio,
   };
 }
@@ -131,7 +132,7 @@ async function verificarContrasena<T extends { hashContrasena: string | null }>(
 
 async function crearSesion(usuario: UsuarioSesion): Promise<SesionIniciada> {
   const tokenRefresco = generarTokenAleatorio();
-  const esSocio = usuario.rol === 'SOCIO';
+  const esSocio = tieneRol(usuario, 'SOCIO');
   await prisma.sesion.create({
     data: {
       // La tabla de sesiones guarda a quién pertenece: un usuario O un socio.
@@ -144,7 +145,7 @@ async function crearSesion(usuario: UsuarioSesion): Promise<SesionIniciada> {
   return {
     tokenAcceso: firmarTokenAcceso({
       usuarioId: usuario.id,
-      rol: usuario.rol,
+      roles: usuario.roles,
       gimnasioId: usuario.gimnasio?.id ?? null,
     }),
     tokenRefresco,
@@ -157,7 +158,11 @@ async function crearSesion(usuario: UsuarioSesion): Promise<SesionIniciada> {
 /** Login del personal: el email se busca SOLO dentro del gimnasio indicado. */
 export async function iniciarSesionStaff(datos: DatosLoginStaff): Promise<SesionIniciada> {
   const usuario = await prisma.usuario.findFirst({
-    where: { email: datos.email, gimnasio: { slug: datos.gimnasio }, rol: { not: Rol.SUPERADMIN } },
+    where: {
+      email: datos.email,
+      gimnasio: { slug: datos.gimnasio },
+      NOT: { roles: { has: Rol.SUPERADMIN } },
+    },
     select: seleccionUsuario,
   });
   return crearSesion(
@@ -178,7 +183,7 @@ export async function iniciarSesionSocio(datos: DatosLoginSocio): Promise<Sesion
 
 export async function iniciarSesionAdmin(datos: DatosLoginAdmin): Promise<SesionIniciada> {
   const usuario = await prisma.usuario.findFirst({
-    where: { email: datos.email, rol: Rol.SUPERADMIN },
+    where: { email: datos.email, roles: { has: Rol.SUPERADMIN } },
     select: seleccionUsuario,
   });
   return crearSesion(
@@ -232,8 +237,9 @@ export async function cerrarSesion(tokenRefresco: string | undefined): Promise<v
 }
 
 /** Datos actualizados de quien está logueado (usuario del panel o socio). */
-export async function obtenerUsuarioSesion({ usuarioId, rol }: DatosAuth): Promise<UsuarioSesion> {
-  if (rol === 'SOCIO') {
+export async function obtenerUsuarioSesion(auth: DatosAuth): Promise<UsuarioSesion> {
+  const { usuarioId } = auth;
+  if (tieneRol(auth, 'SOCIO')) {
     const socio = await prisma.socio.findUnique({
       where: { id: usuarioId },
       select: seleccionSocio,

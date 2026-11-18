@@ -1,5 +1,5 @@
 import type { Request, RequestHandler } from 'express';
-import type { Rol, RolSesion } from '@gimnasio/compartido';
+import { tieneRol, type Rol } from '@gimnasio/compartido';
 import { ErrorApp } from '../errores';
 import { type DatosAuth, verificarTokenAcceso } from '../modulos/auth/tokens';
 
@@ -21,7 +21,7 @@ export const autenticar: RequestHandler = (req, _res, next) => {
 };
 
 /**
- * Deja pasar solo a los roles indicados. Va DESPUÉS de `autenticar`:
+ * Deja pasar a quien tenga ALGUNO de los roles indicados (un usuario puede tener varios). Va DESPUÉS de `autenticar`:
  *   router.get('/reportes', autenticar, permitirRoles('DUENO'), handler)
  * 401 = no sé quién sos. 403 = sé quién sos, pero no tenés permiso.
  *
@@ -29,10 +29,8 @@ export const autenticar: RequestHandler = (req, _res, next) => {
  * panel quedan cerradas para los socios sin tener que acordarse de excluirlos.
  */
 export function permitirRoles(...roles: Rol[]): RequestHandler {
-  const permitidos: readonly RolSesion[] = roles;
   return (req, _res, next) => {
-    const { rol } = obtenerAuth(req);
-    if (!permitidos.includes(rol)) {
+    if (!tieneRol(obtenerAuth(req), ...roles)) {
       throw new ErrorApp(403, 'SIN_PERMISO', 'No tenés permiso para hacer esto');
     }
     next();
@@ -60,7 +58,7 @@ export function obtenerGimnasioId(req: Request): string {
 
 /** Solo socios (rutas de "mi cuenta"). Va después de `autenticar`. */
 export const soloSocios: RequestHandler = (req, _res, next) => {
-  if (obtenerAuth(req).rol !== 'SOCIO') {
+  if (!tieneRol(obtenerAuth(req), 'SOCIO')) {
     throw new ErrorApp(403, 'SIN_PERMISO', 'Esta sección es solo para socios');
   }
   next();

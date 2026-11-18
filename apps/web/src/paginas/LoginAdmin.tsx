@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { esquemaLoginAdmin } from '@gimnasio/compartido';
+import { tieneRol, esquemaLoginAdmin } from '@gimnasio/compartido';
 import { mostrarErrorEnFormulario } from '../api/formularios';
 import { Campo } from '../componentes/Campo';
 import { PantallaIngreso } from '../componentes/PantallaIngreso';
@@ -19,7 +19,7 @@ export function LoginAdmin() {
 
   useEffect(() => aplicarMarca(MARCA_APP), []);
 
-  if (usuario?.rol === 'SUPERADMIN') return <Navigate to="/admin" replace />;
+  if (usuario && tieneRol(usuario, 'SUPERADMIN')) return <Navigate to="/admin" replace />;
 
   const enviar = formulario.handleSubmit(async (datos) => {
     setErrorGeneral(undefined);

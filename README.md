@@ -32,12 +32,14 @@ Los valores entre paréntesis son los de por defecto; cada gimnasio los configur
 
 ## Roles
 
+Una persona del personal puede tener **varios roles** (ej. recepción y profe).
+
 | Rol         | Qué puede hacer                                                    |
 | ----------- | ------------------------------------------------------------------ |
 | Súper-admin | Da de alta y administra gimnasios                                  |
-| Dueño       | Todo dentro de su gimnasio                                         |
-| Recepción   | Socios, pagos e ingresos (sin reportes ni configuración)           |
-| Profesor    | Rutinas y consulta de socios                                       |
+| Dueño       | Todo dentro de su gimnasio, incluido dar de alta a su personal     |
+| Recepción   | Socios, pagos, ingresos y clases (sin reportes ni configuración)   |
+| Profesor    | Rutinas, clases y consulta de socios                               |
 | Pantalla    | Usuario de la tablet de recepción: solo registra ingresos          |
 | Socio       | Desde el celular: su cuota, sus rutinas, la ocupación y sus clases |
 
@@ -276,6 +278,15 @@ En el inicio del panel: cobrado en el mes (y contra el anterior), socios activos
 - **El cupo no se puede pasar ni con dos personas tocando a la vez.** Contar los anotados y después insertar tiene una carrera: los dos ven 11/12 y entran los dos. Por eso la inscripción corre en una transacción que primero bloquea la fila de la clase (`SELECT … FOR UPDATE`): la segunda espera a que la primera termine y ya ve 12/12.
 - Con la **cuota vencida no se puede anotar** (a diferencia del ingreso, acá no hay nadie en la puerta para decidir). Bajarse solo se puede antes de que empiece la clase.
 
+### Personal y varios roles por persona
+
+- El dueño da de alta a su personal en **Personal**: nombre, email, roles y una contraseña inicial (se la pasa en persona). Puede editarlos, cambiarles la contraseña o **desactivarlos**: no se borran, porque sus cobros y rutinas tienen que seguir diciendo quién los hizo.
+- **Una persona puede tener varios roles** (`roles Rol[]` en la base), por ejemplo recepción **y** profe: ve la suma de los dos menús. Los permisos preguntan "¿tiene alguno de estos roles?" (`tieneRol`), tanto en la API como en la web.
+- Combinaciones: recepción y profe se mezclan libremente. La **pantalla de ingreso va sola**: es una cuenta para una tablet que queda en la entrada, y si tuviera otro rol cualquiera que pase por ahí tendría ese acceso. Dueño y súper-admin no se dan desde acá.
+- La migración se escribió a mano: Prisma iba a borrar la columna `rol` y crear `roles` vacía. En cambio copia el rol de cada uno (`ARRAY["rol"]`) y rehace los `CHECK` sobre la lista.
+- Si a alguien le cambian los roles, la contraseña o lo desactivan, **se le cierran las sesiones**. El token de acceso que ya tenía dura a lo sumo 15 minutos.
+- **El email de la pantalla de ingreso puede ser inventado** (ej. `ingreso@tugimnasio.com`): solo se usa para entrar, al personal nunca se le mandan mails. Lo que importa es que tenga una contraseña larga.
+
 ## Web
 
 La app web está en `apps/web`. Pantallas:
@@ -363,6 +374,7 @@ Se cargan con `npm run db:seed`. Son datos ficticios solo para desarrollo. Tambi
 | Recepción           | Power Gym     | `recepcion@powergym.com` |
 | Profesor            | Power Gym     | `profe@powergym.com`     |
 | Pantalla de ingreso | Power Gym     | `ingreso@powergym.com`   |
+| Recepción y profe   | Power Gym     | `carla@powergym.com`     |
 | Dueña               | Titan Fitness | `duena@titanfitness.com` |
 
 **Socios de Power Gym** (cada uno es un caso de prueba):

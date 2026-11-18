@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
-import { esquemaColor, NOMBRES_ROL, type GimnasioAdminDetalle } from '@gimnasio/compartido';
+import { nombresDeRoles, esquemaColor, type GimnasioAdminDetalle } from '@gimnasio/compartido';
 import { pedir } from '../../api/cliente';
 import { mostrarErrorEnFormulario } from '../../api/formularios';
 import { Campo } from '../../componentes/Campo';
@@ -121,7 +121,7 @@ export function GimnasioDetalle() {
                     <strong>{usuario.nombre}</strong>{' '}
                     {!usuario.activo && <span className="etiqueta">Inactivo</span>}
                   </td>
-                  <td>{NOMBRES_ROL[usuario.rol]}</td>
+                  <td>{nombresDeRoles(usuario.roles)}</td>
                   <td className={tabla.secundaria}>{usuario.email}</td>
                 </tr>
               ))}

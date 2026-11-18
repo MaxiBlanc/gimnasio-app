@@ -28,3 +28,16 @@ export const NOMBRES_ROL: Record<RolSesion, string> = {
   KIOSCO: 'Pantalla de ingreso',
   SOCIO: 'Socio',
 };
+
+/** ¿Tiene alguno de estos roles? Un usuario puede tener varios (ej. recepción y profe). */
+export function tieneRol(usuario: { roles: readonly RolSesion[] }, ...roles: RolSesion[]): boolean {
+  return usuario.roles.some((rol) => roles.includes(rol));
+}
+
+/** "Recepción y Profesor": los roles de alguien, para mostrar. */
+export function nombresDeRoles(roles: readonly RolSesion[]): string {
+  const nombres = roles.map((rol) => NOMBRES_ROL[rol]);
+  return nombres.length > 1
+    ? `${nombres.slice(0, -1).join(', ')} y ${nombres.at(-1)}`
+    : (nombres[0] ?? '');
+}

@@ -41,7 +41,7 @@ describe('POST /api/auth/socio/login', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.usuario).toMatchObject({
       nombre: 'Juan Pérez',
-      rol: 'SOCIO',
+      roles: ['SOCIO'],
       gimnasio: { slug: 'gimnasio-a' },
     });
     expect(JSON.stringify(respuesta.body)).not.toContain('hash');
@@ -78,13 +78,13 @@ describe('sesión del socio', () => {
       .post('/api/auth/refrescar')
       .set('Cookie', cookieRefresco(login));
     expect(refresco.status).toBe(200);
-    expect(refresco.body.usuario.rol).toBe('SOCIO');
+    expect(refresco.body.usuario.roles).toEqual(['SOCIO']);
 
     const yo = await request(app)
       .get('/api/auth/yo')
       .set('Authorization', `Bearer ${refresco.body.tokenAcceso}`);
     expect(yo.status).toBe(200);
-    expect(yo.body).toMatchObject({ nombre: 'Juan Pérez', rol: 'SOCIO' });
+    expect(yo.body).toMatchObject({ nombre: 'Juan Pérez', roles: ['SOCIO'] });
   });
 
   it('si lo dan de baja, no puede refrescar la sesión', async () => {
@@ -102,7 +102,7 @@ describe('sesión del socio', () => {
     const socio = await crearSocio();
     const token = autorizacionDe({
       id: socio.id,
-      rol: 'SOCIO',
+      roles: ['SOCIO'],
       gimnasioId: escenario.gimnasioA.gimnasio.id,
     });
 

@@ -101,3 +101,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Varias casillas apiladas (ej. los roles de alguien del personal). */
+.grupoCasillas {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.grupoCasillas legend {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-weight: 600;
+}

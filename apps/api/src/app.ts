@@ -19,6 +19,7 @@ import { rutasCron } from './modulos/avisos/avisos.rutas';
 import { rutasTablero } from './modulos/tablero/tablero.rutas';
 import { rutasRutinas, rutasRutinasDeSocio } from './modulos/rutinas/rutinas.rutas';
 import { rutasClases } from './modulos/clases/clases.rutas';
+import { rutasPersonal } from './modulos/personal/personal.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -56,6 +57,7 @@ export function crearApp() {
   app.use('/api/tablero', rutasTablero);
   app.use('/api/rutinas', rutasRutinas);
   app.use('/api/clases', rutasClases);
+  app.use('/api/personal', rutasPersonal);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

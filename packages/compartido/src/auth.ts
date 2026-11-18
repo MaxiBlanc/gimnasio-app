@@ -48,7 +48,7 @@ export interface UsuarioSesion {
   id: string;
   nombre: string;
   email: string;
-  rol: RolSesion; // 'SOCIO' si es un socio
+  roles: RolSesion[]; // ['SOCIO'] si es un socio; el personal puede tener varios
   gimnasio: GimnasioSesion | null; // null solo para el súper-admin
 }
 

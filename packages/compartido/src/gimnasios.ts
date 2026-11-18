@@ -105,7 +105,7 @@ export interface UsuarioResumen {
   id: string;
   nombre: string;
   email: string;
-  rol: Rol;
+  roles: Rol[];
   activo: boolean;
 }
 

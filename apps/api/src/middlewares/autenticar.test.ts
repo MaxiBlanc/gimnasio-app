@@ -23,10 +23,10 @@ app.use(manejarErrores);
 
 const GIMNASIO = '0195e4c8-0000-7000-8000-000000000001';
 const token = (
-  rol: Parameters<typeof firmarTokenAcceso>[0]['rol'],
+  rol: Parameters<typeof firmarTokenAcceso>[0]['roles'][number],
   gimnasioId: string | null = GIMNASIO,
 ) =>
-  `Bearer ${firmarTokenAcceso({ usuarioId: '0195e4c8-0000-7000-8000-0000000000aa', rol, gimnasioId })}`;
+  `Bearer ${firmarTokenAcceso({ usuarioId: '0195e4c8-0000-7000-8000-0000000000aa', roles: [rol], gimnasioId })}`;
 
 describe('permitirRoles', () => {
   it('deja pasar al rol permitido', async () => {

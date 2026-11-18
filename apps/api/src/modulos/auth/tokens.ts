@@ -22,21 +22,21 @@ import { entorno } from '../../config/entorno';
 /** Lo que guardamos dentro del JWT. Es legible por cualquiera: nunca pongas datos sensibles. */
 const esquemaContenidoJwt = z.object({
   sub: z.uuid(), // "subject": el id del usuario o del socio (nombre estándar de JWT)
-  rol: z.enum(ROLES_SESION),
+  roles: z.array(z.enum(ROLES_SESION)).min(1),
   gimnasioId: z.uuid().nullable(),
 });
 
 export type DatosAuth = {
-  /** Id del usuario del panel, o del socio si `rol` es 'SOCIO'. */
+  /** Id del usuario del panel, o del socio si `roles` es ['SOCIO']. */
   usuarioId: string;
-  rol: RolSesion;
+  roles: RolSesion[];
   gimnasioId: string | null;
 };
 
 export function firmarTokenAcceso(datos: DatosAuth): string {
   const contenido: z.infer<typeof esquemaContenidoJwt> = {
     sub: datos.usuarioId,
-    rol: datos.rol,
+    roles: datos.roles,
     gimnasioId: datos.gimnasioId,
   };
   return jwt.sign(contenido, entorno.JWT_SECRETO, {
@@ -51,7 +51,7 @@ export function verificarTokenAcceso(token: string): DatosAuth | null {
     // Fijamos el algoritmo: evita ataques donde el token dice "alg: none" para saltear la firma.
     const decodificado = jwt.verify(token, entorno.JWT_SECRETO, { algorithms: ['HS256'] });
     const contenido = esquemaContenidoJwt.parse(decodificado);
-    return { usuarioId: contenido.sub, rol: contenido.rol, gimnasioId: contenido.gimnasioId };
+    return { usuarioId: contenido.sub, roles: contenido.roles, gimnasioId: contenido.gimnasioId };
   } catch {
     return null;
   }

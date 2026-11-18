@@ -27,7 +27,7 @@ const como = (usuario: Parameters<typeof autorizacionDe>[0]) => ({
 async function socioAlDia(dni: string, pagoHasta = '2026-11-30') {
   const { gimnasio, dueno } = escenario.gimnasioA;
   const socio = await crearSocioDePrueba(gimnasio, dueno.id, { dni, pagoHasta });
-  return como({ id: socio.id, rol: 'SOCIO', gimnasioId: gimnasio.id });
+  return como({ id: socio.id, roles: ['SOCIO'], gimnasioId: gimnasio.id });
 }
 
 async function crearClase(cupo = 10) {

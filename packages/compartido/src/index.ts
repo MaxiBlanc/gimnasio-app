@@ -11,5 +11,6 @@ export * from './cuotas';
 export * from './ingresos';
 export * from './rutinas';
 export * from './clases';
+export * from './personal';
 
 export const NOMBRE_APP = 'GimnasioApp';

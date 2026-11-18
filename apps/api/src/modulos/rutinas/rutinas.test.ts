@@ -96,7 +96,7 @@ describe('rutinas de un socio', () => {
     const ana = await crearSocioDePrueba(gimnasio, dueno.id, { dni: '30000002' });
     await como(profesor).post(`/api/socios/${juan.id}/rutinas`, RUTINA);
 
-    const socio = (id: string) => ({ id, rol: 'SOCIO' as const, gimnasioId: gimnasio.id });
+    const socio = (id: string) => ({ id, roles: ['SOCIO' as const], gimnasioId: gimnasio.id });
     const deJuan = await como(socio(juan.id)).get('/api/mi-cuenta/rutinas');
     const deAna = await como(socio(ana.id)).get('/api/mi-cuenta/rutinas');
 
@@ -108,7 +108,7 @@ describe('rutinas de un socio', () => {
   it('un socio no puede usar las rutas de rutinas del panel', async () => {
     const { gimnasio, dueno } = escenario.gimnasioA;
     const socio = await crearSocioDePrueba(gimnasio, dueno.id);
-    const respuesta = await como({ id: socio.id, rol: 'SOCIO', gimnasioId: gimnasio.id }).get(
+    const respuesta = await como({ id: socio.id, roles: ['SOCIO'], gimnasioId: gimnasio.id }).get(
       '/api/rutinas/plantillas',
     );
     expect(respuesta.status).toBe(403);

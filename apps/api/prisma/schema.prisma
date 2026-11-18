@@ -99,7 +99,9 @@ model Usuario {
   nombre         String
   email          String
   hashContrasena String   @map("hash_contrasena")
-  rol            Rol
+  /// Uno o varios (ej. RECEPCION + PROFESOR). Las combinaciones válidas las controla Zod
+  /// (`esquemaRoles`) y la base asegura que no quede vacío ni mezcle al súper-admin.
+  roles          Rol[]
   activo         Boolean  @default(true)
   creadoEn       DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn  DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)

@@ -7,10 +7,11 @@ import {
   House,
   ScanLine,
   Settings,
+  UserCog,
   Tags,
   Users,
 } from 'lucide-react';
-import type { RolSesion, UsuarioSesion } from '@gimnasio/compartido';
+import { tieneRol, type RolSesion, type UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
 import { InicioAdmin } from './paginas/InicioAdmin';
@@ -31,6 +32,7 @@ import { MiCuenta } from './paginas/socio/MiCuenta';
 import { EditarRutina } from './paginas/rutinas/EditarRutina';
 import { Plantillas } from './paginas/rutinas/Plantillas';
 import { Clases } from './paginas/clases/Clases';
+import { Personal } from './paginas/personal/Personal';
 import { TabletIngreso } from './paginas/ingreso/TabletIngreso';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
@@ -58,6 +60,7 @@ const MENU_STAFF: ItemMenu[] = [
     Icono: ScanLine,
     roles: ['DUENO', 'RECEPCION', 'KIOSCO'],
   },
+  { ruta: '/panel/personal', etiqueta: 'Personal', Icono: UserCog, roles: ['DUENO'] },
   { ruta: '/panel/planes', etiqueta: 'Planes y descuentos', Icono: Tags, roles: ['DUENO'] },
   { ruta: '/panel/configuracion', etiqueta: 'Configuración', Icono: Settings, roles: ['DUENO'] },
 ];
@@ -84,7 +87,7 @@ function ConSesion({ roles, children }: PropsConSesion) {
         Cargando…
       </p>
     );
-  if (!usuario || !roles.includes(usuario.rol)) {
+  if (!usuario || !tieneRol(usuario, ...roles)) {
     if (roles.includes('SUPERADMIN')) return <Navigate to="/admin/ingresar" replace />;
     const ultimo = leerUltimoGimnasio();
     const login = roles.includes('SOCIO') ? '/socio' : '';
@@ -96,7 +99,7 @@ function ConSesion({ roles, children }: PropsConSesion) {
 /** Dentro del panel: una pantalla solo para algunos roles (el resto vuelve al inicio). */
 function SoloRoles({ roles, children }: { roles: RolSesion[]; children: ReactNode }) {
   const { usuario } = useSesion();
-  if (!usuario || !roles.includes(usuario.rol)) return <Navigate to="/panel" replace />;
+  if (!usuario || !tieneRol(usuario, ...roles)) return <Navigate to="/panel" replace />;
   return children;
 }
 
@@ -183,6 +186,14 @@ export const enrutador = createBrowserRouter([
             element: (
               <SoloRoles roles={['DUENO']}>
                 <PlanesDescuentos />
+              </SoloRoles>
+            ),
+          },
+          {
+            path: 'personal',
+            element: (
+              <SoloRoles roles={['DUENO']}>
+                <Personal />
               </SoloRoles>
             ),
           },

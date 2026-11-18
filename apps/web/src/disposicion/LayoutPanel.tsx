@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { LogOut, Menu, X } from 'lucide-react';
-import { NOMBRES_ROL, type RolSesion, type UsuarioSesion } from '@gimnasio/compartido';
+import { nombresDeRoles, tieneRol, type RolSesion, type UsuarioSesion } from '@gimnasio/compartido';
 import { BotonTema } from '../componentes/BotonTema';
 import { useSesion } from '../sesion/sesion';
 import { aplicarMarca, MARCA_APP } from '../tema/marca';
@@ -37,7 +37,7 @@ export function LayoutPanel({ usuario, menu, alSalir }: Props) {
 
   useEffect(() => aplicarMarca(gimnasio ?? MARCA_APP), [gimnasio]);
 
-  const items = menu.filter((item) => item.roles.includes(usuario.rol));
+  const items = menu.filter((item) => tieneRol(usuario, ...item.roles));
 
   const cerrarSesion = async () => {
     await salir();
@@ -88,7 +88,7 @@ export function LayoutPanel({ usuario, menu, alSalir }: Props) {
           <div className={estilos.usuario}>
             <div>
               <strong>{usuario.nombre}</strong>
-              <span className={estilos.rol}>{NOMBRES_ROL[usuario.rol]}</span>
+              <span className={estilos.rol}>{nombresDeRoles(usuario.roles)}</span>
             </div>
             <div className={estilos.acciones}>
               <BotonTema />
