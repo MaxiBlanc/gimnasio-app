@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
-import { Building2, House, Settings, Tags, Users } from 'lucide-react';
+import { Building2, House, ScanLine, Settings, Tags, Users } from 'lucide-react';
 import type { RolSesion, UsuarioSesion } from '@gimnasio/compartido';
 import { LayoutPanel, type ItemMenu } from './disposicion/LayoutPanel';
 import { ElegirGimnasio } from './paginas/ElegirGimnasio';
@@ -19,6 +19,7 @@ import { SocioFicha } from './paginas/socios/SocioFicha';
 import { SocioEditar, SocioNuevo } from './paginas/socios/SocioNuevo';
 import { SociosLista } from './paginas/socios/SociosLista';
 import { MiCuenta } from './paginas/socio/MiCuenta';
+import { TabletIngreso } from './paginas/ingreso/TabletIngreso';
 import { useSesion } from './sesion/sesion';
 import { leerUltimoGimnasio } from './sesion/ultimoGimnasio';
 
@@ -31,6 +32,12 @@ const MENU_STAFF: ItemMenu[] = [
     etiqueta: 'Socios',
     Icono: Users,
     roles: ['DUENO', 'RECEPCION', 'PROFESOR'],
+  },
+  {
+    ruta: '/ingreso',
+    etiqueta: 'Pantalla de ingreso',
+    Icono: ScanLine,
+    roles: ['DUENO', 'RECEPCION', 'KIOSCO'],
   },
   { ruta: '/panel/planes', etiqueta: 'Planes y descuentos', Icono: Tags, roles: ['DUENO'] },
   { ruta: '/panel/configuracion', etiqueta: 'Configuración', Icono: Settings, roles: ['DUENO'] },
@@ -83,6 +90,15 @@ export const enrutador = createBrowserRouter([
       { path: '/g/:slug', element: <LoginStaff /> },
       { path: '/g/:slug/socio', element: <LoginStaff socio /> },
       { path: '/g/:slug/activar', element: <ActivarCuenta /> },
+      {
+        // Pantalla completa (sin el menú del panel): queda abierta en la tablet de la entrada.
+        path: '/ingreso',
+        element: (
+          <ConSesion roles={['KIOSCO', 'RECEPCION', 'DUENO']}>
+            {(usuario) => <TabletIngreso usuario={usuario} />}
+          </ConSesion>
+        ),
+      },
       {
         path: '/socio',
         element: (

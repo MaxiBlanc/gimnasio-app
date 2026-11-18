@@ -3,7 +3,12 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import { esquemaLoginSocio, esquemaLoginStaff, type GimnasioSesion } from '@gimnasio/compartido';
+import {
+  esquemaLoginSocio,
+  esquemaLoginStaff,
+  type GimnasioSesion,
+  type RolSesion,
+} from '@gimnasio/compartido';
 import { ErrorApi, pedir } from '../api/cliente';
 import { mostrarErrorEnFormulario } from '../api/formularios';
 import { Campo } from '../componentes/Campo';
@@ -48,13 +53,15 @@ export function LoginStaff({ socio = false }: Props) {
   const formulario = useForm<DatosFormulario>({
     resolver: zodResolver(socio ? esquemaSocio : esquemaStaff) as Resolver<DatosFormulario>,
   });
-  const destino = socio ? '/socio' : '/panel';
+  // A dónde va cada uno al entrar. La tablet de la entrada, directo a su pantalla.
+  const destinoDe = (rol: RolSesion) =>
+    rol === 'SOCIO' ? '/socio' : rol === 'KIOSCO' ? '/ingreso' : '/panel';
   const { errors: errores, isSubmitting: enviando } = formulario.formState;
 
   // Si ya hay sesión en este gimnasio, no tiene sentido mostrar el login.
   const esSocio = usuario?.rol === 'SOCIO';
   if (usuario?.gimnasio?.slug === slug && esSocio === socio) {
-    return <Navigate to={destino} replace />;
+    return <Navigate to={destinoDe(usuario.rol)} replace />;
   }
 
   if (marca.isError) {
@@ -93,7 +100,8 @@ export function LoginStaff({ socio = false }: Props) {
             gimnasio: slug,
           });
       if (usuarioLogueado.gimnasio) guardarUltimoGimnasio(usuarioLogueado.gimnasio);
-      void navegar(destino, { replace: true });
+
+      void navegar(destinoDe(usuarioLogueado.rol), { replace: true });
     } catch (error) {
       setErrorGeneral(mostrarErrorEnFormulario(error, formulario.setError));
     }

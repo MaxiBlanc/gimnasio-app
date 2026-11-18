@@ -1,0 +1,174 @@
+.pantalla {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+  background: var(--marca-oscura);
+  color: var(--sobre-marca-oscura);
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+}
+.barra :global(.boton) {
+  color: inherit;
+  opacity: 0.6;
+}
+
+.nombre {
+  font-size: 1.5rem;
+  color: var(--marca);
+}
+
+/* En la tablet acostada: teclado a la izquierda, ocupación a la derecha. */
+.contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem 2rem;
+}
+@media (min-width: 900px) {
+  .contenido {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+.lateral {
+  align-self: start;
+  color: var(--tinta);
+}
+
+.marcador {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
+.pedido {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+}
+
+.visor {
+  min-width: min(100%, 22rem);
+  padding: 0.75rem 1rem;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.08em;
+  background: rgb(255 255 255 / 0.08);
+  border-radius: var(--radio);
+}
+
+.vacio {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.5;
+}
+
+.teclado {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(4.5rem, 6.5rem));
+  gap: 0.75rem;
+}
+
+/* Teclas grandes: se tocan con el dedo, a veces con prisa. */
+.tecla {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 700;
+  color: inherit;
+  background: rgb(255 255 255 / 0.1);
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+  touch-action: manipulation; /* sin el retraso del doble toque para hacer zoom */
+}
+.tecla:active {
+  background: rgb(255 255 255 / 0.22);
+}
+.tecla:focus-visible {
+  outline: none;
+  box-shadow: var(--foco);
+}
+
+.secundaria {
+  font-size: 1.25rem;
+  opacity: 0.8;
+}
+
+.ok {
+  color: var(--sobre-marca);
+  background: var(--marca);
+}
+.ok:active {
+  background: var(--marca);
+  filter: brightness(1.1);
+}
+.ok:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* Resultado: toda la tarjeta toma el color del estado (data-estado → --color-estado). */
+.resultado {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 24rem;
+  align-content: center;
+  padding: 2rem 1.5rem;
+  font: inherit;
+  text-align: center;
+  color: var(--color-estado);
+  background: var(--color-estado-fondo);
+  border: 0;
+  border-radius: calc(var(--radio) * 2);
+  cursor: pointer;
+  animation: aparecer 0.25s ease-out;
+}
+
+.saludo {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+.tituloResultado {
+  font-size: clamp(3rem, 10vw, 6rem);
+  line-height: 1;
+}
+
+.detalle {
+  max-width: 30rem;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.tocar {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--tinta-suave);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resultado {
+    animation: none;
+  }
+}
