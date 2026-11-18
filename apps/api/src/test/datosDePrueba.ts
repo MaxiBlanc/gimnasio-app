@@ -20,7 +20,7 @@ export function autorizacionDe(usuario: { id: string; rol: RolSesion; gimnasioId
  */
 export async function vaciarBase() {
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE pagos, sesiones, tokens_socio, socios, descuentos, planes, usuarios, gimnasios
+    TRUNCATE TABLE avisos_enviados, ingresos, pagos, sesiones, tokens_socio, socios, descuentos, planes, usuarios, gimnasios
     RESTART IDENTITY CASCADE
   `);
 }
@@ -67,4 +67,55 @@ export async function crearEscenarioBase() {
     gimnasioA: await crearGimnasio('Gimnasio A', 'gimnasio-a'),
     gimnasioB: await crearGimnasio('Gimnasio B', 'gimnasio-b'),
   };
+}
+
+/**
+ * Crea un socio (con su plan) en un gimnasio. Con `activado`, ya tiene contraseña.
+ * `pagoHasta` ("AAAA-MM-DD") le registra un pago que cubre hasta esa fecha.
+ */
+export async function crearSocioDePrueba(
+  gimnasio: { id: string },
+  registradoPorId: string,
+  {
+    activado = true,
+    activo = true,
+    dni = '30111222',
+    pagoHasta,
+  }: { activado?: boolean; activo?: boolean; dni?: string; pagoHasta?: string } = {},
+) {
+  const plan = await prisma.plan.create({
+    data: { gimnasioId: gimnasio.id, nombre: `Mensual ${dni}`, precio: 20000, duracionMeses: 1 },
+  });
+  const socio = await prisma.socio.create({
+    data: {
+      gimnasioId: gimnasio.id,
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      dni,
+      telefono: '1155551234',
+      email: `socio${dni}@ejemplo.com`,
+      emergenciaNombre: 'Ana',
+      emergenciaTelefono: '1155554321',
+      planId: plan.id,
+      activo,
+      hashContrasena: activado ? await bcrypt.hash(CONTRASENA_PRUEBA, 4) : null,
+    },
+  });
+  if (pagoHasta) {
+    const hasta = new Date(`${pagoHasta}T00:00:00Z`);
+    await prisma.pago.create({
+      data: {
+        gimnasioId: gimnasio.id,
+        socioId: socio.id,
+        planId: plan.id,
+        periodoDesde: new Date(Date.UTC(hasta.getUTCFullYear(), hasta.getUTCMonth(), 1)),
+        periodoHasta: hasta,
+        montoBase: 20000,
+        montoFinal: 20000,
+        formaPago: 'EFECTIVO',
+        registradoPorId,
+      },
+    });
+  }
+  return socio;
 }

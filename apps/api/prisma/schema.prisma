@@ -79,6 +79,8 @@ model Gimnasio {
   descuentos  Descuento[]
   pagos       Pago[]
   tokensSocio TokenSocio[]
+  ingresos    Ingreso[]
+  avisos      AvisoEnviado[]
 
   @@map("gimnasios")
 }
@@ -192,14 +194,16 @@ model Socio {
   creadoEn           DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn      DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  gimnasio  Gimnasio     @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  gimnasio  Gimnasio       @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
   // Claves foráneas COMPUESTAS (id + gimnasio_id): la base de datos misma impide que un
   // socio tenga asignado un plan o un descuento de OTRO gimnasio, aunque el código tenga un bug.
-  plan      Plan         @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
-  descuento Descuento?   @relation(fields: [descuentoId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  plan      Plan           @relation(fields: [planId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
+  descuento Descuento?     @relation(fields: [descuentoId, gimnasioId], references: [id, gimnasioId], onDelete: Restrict)
   pagos     Pago[]
   sesiones  Sesion[]
   tokens    TokenSocio[]
+  ingresos  Ingreso[]
+  avisos    AvisoEnviado[]
 
   // El DNI es único DENTRO de un gimnasio: la misma persona puede ser socia de dos gimnasios.
   @@unique([gimnasioId, dni])
@@ -263,4 +267,48 @@ model Pago {
   // Consulta más frecuente: "último pago vigente de este socio".
   @@index([gimnasioId, socioId, periodoHasta])
   @@map("pagos")
+}
+
+// Cada vez que un socio entra al gimnasio (lo registra la tablet de ingreso o recepción).
+// Con esto calculamos la ocupación ("cuánta gente hay ahora") y las estadísticas del dueño.
+model Ingreso {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  gimnasioId   String   @map("gimnasio_id") @db.Uuid
+  socioId      String   @map("socio_id") @db.Uuid
+  // Foto del momento: si entró con la cuota vencida queda registrado, aunque después pague.
+  cuotaVencida Boolean  @default(false) @map("cuota_vencida")
+  creadoEn     DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socio    Socio    @relation(fields: [socioId, gimnasioId], references: [id, gimnasioId], onDelete: Cascade)
+
+  // Casi todas las consultas son "ingresos de este gimnasio desde tal hora".
+  @@index([gimnasioId, creadoEn])
+  @@index([socioId, creadoEn])
+  @@map("ingresos")
+}
+
+enum TipoAviso {
+  POR_VENCER
+  VENCIDO
+
+  @@map("tipo_aviso")
+}
+
+// Mails automáticos ya enviados. El @@unique impide mandar el mismo aviso dos veces
+// por la misma cuota, aunque el cron corra de nuevo.
+model AvisoEnviado {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  gimnasioId String    @map("gimnasio_id") @db.Uuid
+  socioId    String    @map("socio_id") @db.Uuid
+  tipo       TipoAviso
+  // Mes de la cuota avisada, "AAAA-MM".
+  mes        String
+  creadoEn   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  gimnasio Gimnasio @relation(fields: [gimnasioId], references: [id], onDelete: Restrict)
+  socio    Socio    @relation(fields: [socioId, gimnasioId], references: [id, gimnasioId], onDelete: Cascade)
+
+  @@unique([socioId, tipo, mes])
+  @@map("avisos_enviados")
 }

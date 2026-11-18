@@ -13,6 +13,8 @@ import { rutasCuentaSocio, rutasSocios } from './modulos/socios/socios.rutas';
 import { rutasPagos, rutasPagosDeSocio } from './modulos/pagos/pagos.rutas';
 import { rutasMiGimnasio } from './modulos/mi-gimnasio/miGimnasio.rutas';
 import { rutasPublicas } from './modulos/publico/publico.rutas';
+import { rutasIngresos, rutasOcupacion } from './modulos/ingresos/ingresos.rutas';
+import { rutasMiCuenta } from './modulos/mi-cuenta/miCuenta.rutas';
 
 /**
  * Crea la app de Express SIN ponerla a escuchar en un puerto.
@@ -42,6 +44,9 @@ export function crearApp() {
   app.use('/api/cuenta-socio', rutasCuentaSocio);
   app.use('/api/pagos', rutasPagos);
   app.use('/api/mi-gimnasio', rutasMiGimnasio);
+  app.use('/api/ingresos', rutasIngresos);
+  app.use('/api/ocupacion', rutasOcupacion);
+  app.use('/api/mi-cuenta', rutasMiCuenta);
 
   app.use(rutaNoEncontrada);
   app.use(manejarErrores);

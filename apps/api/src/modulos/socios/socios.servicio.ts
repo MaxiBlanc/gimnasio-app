@@ -43,12 +43,12 @@ const seleccionSocio = {
 type SocioDeBase = Prisma.SocioGetPayload<{ select: typeof seleccionSocio }>;
 
 /** Lo necesario para calcular estados de cuota: la fecha de hoy y la config del gimnasio. */
-interface ContextoCuotas {
+export interface ContextoCuotas {
   hoy: Date;
   config: ConfigCuotas;
 }
 
-async function obtenerContextoCuotas(gimnasioId: string): Promise<ContextoCuotas> {
+export async function obtenerContextoCuotas(gimnasioId: string): Promise<ContextoCuotas> {
   const config = await prisma.gimnasio.findUniqueOrThrow({
     where: { id: gimnasioId },
     select: { diaCierreCobro: true, diasAvisoVencimiento: true },

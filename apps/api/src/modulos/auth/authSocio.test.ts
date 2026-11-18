@@ -1,40 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import bcrypt from 'bcryptjs';
 import { crearApp } from '../../app';
 import { prisma } from '../../db';
 import {
   CONTRASENA_PRUEBA,
   autorizacionDe,
   crearEscenarioBase,
+  crearSocioDePrueba,
   vaciarBase,
 } from '../../test/datosDePrueba';
 
 const app = crearApp();
 let escenario: Awaited<ReturnType<typeof crearEscenarioBase>>;
 
-/** Crea un socio en el gimnasio A. Con `activado`, ya tiene contraseña. */
-async function crearSocio({ activado = true, activo = true, dni = '30111222' } = {}) {
-  const { gimnasio } = escenario.gimnasioA;
-  const plan = await prisma.plan.create({
-    data: { gimnasioId: gimnasio.id, nombre: `Mensual ${dni}`, precio: 20000, duracionMeses: 1 },
-  });
-  return prisma.socio.create({
-    data: {
-      gimnasioId: gimnasio.id,
-      nombre: 'Juan',
-      apellido: 'Pérez',
-      dni,
-      telefono: '1155551234',
-      email: 'juan@ejemplo.com',
-      emergenciaNombre: 'Ana',
-      emergenciaTelefono: '1155554321',
-      planId: plan.id,
-      activo,
-      hashContrasena: activado ? await bcrypt.hash(CONTRASENA_PRUEBA, 4) : null,
-    },
-  });
-}
+/** Socio en el gimnasio A. */
+const crearSocio = (opciones: Parameters<typeof crearSocioDePrueba>[2] = {}) =>
+  crearSocioDePrueba(escenario.gimnasioA.gimnasio, escenario.gimnasioA.dueno.id, opciones);
 
 const loginSocio = (dni: string, contrasena = CONTRASENA_PRUEBA, gimnasio = 'gimnasio-a') =>
   request(app).post('/api/auth/socio/login').send({ gimnasio, dni, contrasena });
