@@ -2,7 +2,7 @@
 
 Sistema de gestión para gimnasios pensado como **SaaS multi-gimnasio**: una sola aplicación donde cada gimnasio tiene su cuenta, sus datos, su logo y sus colores, sin poder ver los datos de los demás.
 
-> 🚧 En desarrollo. Proyecto de portfolio.
+> Proyecto de portfolio. **Demo:** <https://gimnasio-app-flax.vercel.app>
 
 ## ¿Qué resuelve?
 
