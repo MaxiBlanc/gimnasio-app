@@ -15,7 +15,7 @@ Sistema de gestión para gimnasios pensado como **SaaS multi-gimnasio**: una sol
 
 Los pagos se **registran** en el sistema; la app no cobra ni se integra con medios de pago.
 
-El proyecto está pensado para funcionar **con costo cero** usando planes gratuitos (Vercel, Neon, Resend). Por eso, por ejemplo, el logo de cada gimnasio se carga como **URL de una imagen** en lugar de subir el archivo.
+El proyecto está pensado para funcionar **con costo cero** usando planes gratuitos (Vercel, Neon y Gmail para los mails). Por eso, por ejemplo, el logo de cada gimnasio se carga como **URL de una imagen** en lugar de subir el archivo.
 
 ### Reglas de la cuota
 
